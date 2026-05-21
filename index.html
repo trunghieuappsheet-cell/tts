@@ -1,23 +1,21 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-  <!-- Tiêu đề -->
   <title>TTS • HaMa Tech</title>
 
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="icon" type="image/png" href="favicon.png?v=2"/>
 
-  <!-- Preview khi gửi link -->
+  <!-- Preview -->
   <meta property="og:title" content="TTS • HaMa Tech">
   <meta property="og:description" content="Smart Solutions • Future Technology">
   <meta property="og:image" content="https://tts.hama.io.vn/logo.png">
   <meta property="og:url" content="https://tts.hama.io.vn">
   <meta property="og:type" content="website">
 
-  <!-- Twitter / Discord -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="TTS • HaMa Tech">
   <meta name="twitter:description" content="Smart Solutions • Future Technology">
@@ -38,7 +36,6 @@
       font-family:Arial,sans-serif;
     }
 
-    /* iframe */
     iframe{
       width:100%;
       height:100%;
@@ -61,20 +58,30 @@
       transition:opacity .5s ease;
     }
 
-    /* Logo animation */
+    /* Logo */
     .loading img{
       width:140px;
+      height:auto;
+      object-fit:contain;
+
       animation:pulse 1.6s infinite ease-in-out;
-      transform-origin:center;
+
+      /* KHÔNG nền */
+      background:transparent;
+
+      /* làm mịn */
+      image-rendering:auto;
+
+      /* glow */
       filter:
-        drop-shadow(0 0 12px rgba(0,0,0,.12))
-        drop-shadow(0 0 30px rgba(0,0,0,.08));
+        drop-shadow(0 0 12px rgba(0,0,0,.08))
+        drop-shadow(0 0 24px rgba(0,0,0,.05));
     }
 
     @keyframes pulse{
       0%{
         transform:scale(.88);
-        opacity:.75;
+        opacity:.72;
       }
 
       50%{
@@ -84,7 +91,7 @@
 
       100%{
         transform:scale(.88);
-        opacity:.75;
+        opacity:.72;
       }
     }
 
@@ -99,7 +106,7 @@
 
   <!-- Loading -->
   <div class="loading" id="loading">
-    <img src="logo.png" alt="HaMa Tech">
+    <img src="logo.png?v=2" alt="HaMa Tech">
   </div>
 
   <!-- Website -->
@@ -112,7 +119,6 @@
     const frame = document.getElementById("siteFrame");
     const loading = document.getElementById("loading");
 
-    // Ẩn loading khi iframe load xong
     frame.onload = () => {
       loading.classList.add("hide");
 
@@ -121,7 +127,6 @@
       }, 500);
     };
 
-    // fallback nếu load lâu
     setTimeout(() => {
       loading.classList.add("hide");
 
