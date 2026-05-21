@@ -43,16 +43,88 @@
       border:none;
       position:fixed;
       inset:0;
+      z-index:1;
+    }
+
+    /* Loading screen */
+    .loading{
+      position:fixed;
+      inset:0;
+      background:#1e120d;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:9999;
+      transition:opacity .5s ease;
+    }
+
+    /* Logo animation */
+    .loading img{
+      width:140px;
+      animation:pulse 1.6s infinite ease-in-out;
+      filter:
+        drop-shadow(0 0 12px rgba(211,154,95,.35))
+        drop-shadow(0 0 30px rgba(211,154,95,.2));
+    }
+
+    @keyframes pulse{
+      0%{
+        transform:scale(.9);
+        opacity:.75;
+      }
+
+      50%{
+        transform:scale(1.12);
+        opacity:1;
+      }
+
+      100%{
+        transform:scale(.9);
+        opacity:.75;
+      }
+    }
+
+    .loading.hide{
+      opacity:0;
+      pointer-events:none;
     }
   </style>
 </head>
 
 <body>
 
+  <!-- Loading -->
+  <div class="loading" id="loading">
+    <img src="logo.png" alt="HaMa Tech Logo">
+  </div>
+
   <!-- Website -->
   <iframe
+    id="siteFrame"
     src="https://script.google.com/macros/s/AKfycbwrtLgAK-djLst91t_7vz3q8743IHIJavF9rZ8e8B42e9qacetq3-hIiJrfT5DEUb_aXg/exec">
   </iframe>
+
+  <script>
+    const frame = document.getElementById("siteFrame");
+    const loading = document.getElementById("loading");
+
+    frame.onload = () => {
+      loading.classList.add("hide");
+
+      setTimeout(() => {
+        loading.style.display = "none";
+      }, 500);
+    };
+
+    // fallback nếu iframe load chậm
+    setTimeout(() => {
+      loading.classList.add("hide");
+
+      setTimeout(() => {
+        loading.style.display = "none";
+      }, 500);
+    }, 8000);
+  </script>
 
 </body>
 </html>
