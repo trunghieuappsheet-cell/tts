@@ -4,13 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-  <title>HaMa Tech</title>
+  <!-- Tiêu đề -->
+  <title>TTS • HaMa Tech</title>
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <!-- Logo preview khi gửi link -->
-  <meta property="og:title" content="BIM PQ">
+  <!-- Preview khi gửi link -->
+  <meta property="og:title" content="TTS • HaMa Tech">
   <meta property="og:description" content="Smart Solutions • Future Technology">
   <meta property="og:image" content="https://tts.hama.io.vn/logo.png">
   <meta property="og:url" content="https://tts.hama.io.vn">
@@ -18,8 +19,8 @@
 
   <!-- Twitter / Discord -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="BIM PQ">
-  <meta name="twitter:description" content="Ứng dụng đăng ký thông tin thực tập">
+  <meta name="twitter:title" content="TTS • HaMa Tech">
+  <meta name="twitter:description" content="Smart Solutions • Future Technology">
   <meta name="twitter:image" content="https://tts.hama.io.vn/logo.png">
 
   <style>
@@ -33,10 +34,11 @@
       width:100%;
       height:100%;
       overflow:hidden;
-      background:#1e120d;
-      font-family:Arial, sans-serif;
+      background:#ffffff;
+      font-family:Arial,sans-serif;
     }
 
+    /* iframe */
     iframe{
       width:100%;
       height:100%;
@@ -44,13 +46,14 @@
       position:fixed;
       inset:0;
       z-index:1;
+      background:#fff;
     }
 
-    /* Loading screen */
+    /* Loading */
     .loading{
       position:fixed;
       inset:0;
-      background:#1e120d;
+      background:#ffffff;
       display:flex;
       align-items:center;
       justify-content:center;
@@ -62,14 +65,15 @@
     .loading img{
       width:140px;
       animation:pulse 1.6s infinite ease-in-out;
+      transform-origin:center;
       filter:
-        drop-shadow(0 0 12px rgba(211,154,95,.35))
-        drop-shadow(0 0 30px rgba(211,154,95,.2));
+        drop-shadow(0 0 12px rgba(0,0,0,.12))
+        drop-shadow(0 0 30px rgba(0,0,0,.08));
     }
 
     @keyframes pulse{
       0%{
-        transform:scale(.9);
+        transform:scale(.88);
         opacity:.75;
       }
 
@@ -79,7 +83,7 @@
       }
 
       100%{
-        transform:scale(.9);
+        transform:scale(.88);
         opacity:.75;
       }
     }
@@ -95,7 +99,7 @@
 
   <!-- Loading -->
   <div class="loading" id="loading">
-    <img src="logo.png" alt="HaMa Tech Logo">
+    <img src="logo.png" alt="HaMa Tech">
   </div>
 
   <!-- Website -->
@@ -108,6 +112,7 @@
     const frame = document.getElementById("siteFrame");
     const loading = document.getElementById("loading");
 
+    // Ẩn loading khi iframe load xong
     frame.onload = () => {
       loading.classList.add("hide");
 
@@ -116,7 +121,7 @@
       }, 500);
     };
 
-    // fallback nếu iframe load chậm
+    // fallback nếu load lâu
     setTimeout(() => {
       loading.classList.add("hide");
 
