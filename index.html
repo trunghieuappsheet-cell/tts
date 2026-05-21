@@ -4,21 +4,23 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-  <title>BIM PQ/title>
+  <!-- Tiêu đề -->
+  <title>Đăng ký thông tin thực tập</title>
 
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png?v=2"/>
+  <link rel="icon" type="image/png" href="favicon.png?v=3"/>
 
-  <!-- Preview -->
-  <meta property="og:title" content="TTS • HaMa Tech">
-  <meta property="og:description" content="Smart Solutions • Future Technology">
+  <!-- Preview khi gửi link -->
+  <meta property="og:title" content="Đăng ký thông tin thực tập">
+  <meta property="og:description" content="Hệ thống đăng ký thông tin thực tập trực tuyến">
   <meta property="og:image" content="https://tts.hama.io.vn/logo.png">
   <meta property="og:url" content="https://tts.hama.io.vn">
   <meta property="og:type" content="website">
 
+  <!-- Twitter / Discord -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Đăng ký thông tin thực tập">
-  <meta name="twitter:description" content="Đăng ký thông tin thực tập">
+  <meta name="twitter:description" content="Hệ thống đăng ký thông tin thực tập trực tuyến">
   <meta name="twitter:image" content="https://tts.hama.io.vn/logo.png">
 
   <style>
@@ -42,99 +44,17 @@
       border:none;
       position:fixed;
       inset:0;
-      z-index:1;
-      background:#fff;
-    }
-
-    /* Loading */
-    .loading{
-      position:fixed;
-      inset:0;
       background:#ffffff;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      z-index:9999;
-      transition:opacity .5s ease;
-    }
-
-    /* Logo */
-    .loading img{
-      width:140px;
-      height:auto;
-      object-fit:contain;
-
-      animation:pulse 1.6s infinite ease-in-out;
-
-      /* KHÔNG nền */
-      background:transparent;
-
-      /* làm mịn */
-      image-rendering:auto;
-
-      /* glow */
-      filter:
-        drop-shadow(0 0 12px rgba(0,0,0,.08))
-        drop-shadow(0 0 24px rgba(0,0,0,.05));
-    }
-
-    @keyframes pulse{
-      0%{
-        transform:scale(.88);
-        opacity:.72;
-      }
-
-      50%{
-        transform:scale(1.12);
-        opacity:1;
-      }
-
-      100%{
-        transform:scale(.88);
-        opacity:.72;
-      }
-    }
-
-    .loading.hide{
-      opacity:0;
-      pointer-events:none;
     }
   </style>
 </head>
 
 <body>
 
-  <!-- Loading -->
-  <div class="loading" id="loading">
-    <img src="logo.png?v=2" alt="HaMa Tech">
-  </div>
-
   <!-- Website -->
   <iframe
-    id="siteFrame"
     src="https://script.google.com/macros/s/AKfycbwrtLgAK-djLst91t_7vz3q8743IHIJavF9rZ8e8B42e9qacetq3-hIiJrfT5DEUb_aXg/exec">
   </iframe>
-
-  <script>
-    const frame = document.getElementById("siteFrame");
-    const loading = document.getElementById("loading");
-
-    frame.onload = () => {
-      loading.classList.add("hide");
-
-      setTimeout(() => {
-        loading.style.display = "none";
-      }, 500);
-    };
-
-    setTimeout(() => {
-      loading.classList.add("hide");
-
-      setTimeout(() => {
-        loading.style.display = "none";
-      }, 500);
-    }, 8000);
-  </script>
 
 </body>
 </html>
