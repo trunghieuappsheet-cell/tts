@@ -11,10 +11,6 @@
   <meta property="og:image" content="https://tts.hama.io.vn/logo.png">
   <meta property="og:url" content="https://tts.hama.io.vn">
   <meta property="og:type" content="website">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Đăng ký thông tin thực tập">
-  <meta name="twitter:description" content="Hệ thống đăng ký thông tin thực tập trực tuyến">
-  <meta name="twitter:image" content="https://tts.hama.io.vn/logo.png">
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -69,16 +65,15 @@
     .review-img-wrap { display: inline-block; margin: 8px; text-align: center; vertical-align: top; }
     .review-img-wrap img { border: 1px solid #ddd; border-radius: 8px; object-fit: cover; box-shadow: 0 2px 5px rgba(0,0,0,0.05); background-color: #fafafa; }
 
-    /* CSS GIAO DIỆN CAMERA & LẤY NÉT */
-    #reader { position: relative; width: 100%; height: 320px; margin-top: 15px; border-radius: 12px; overflow: hidden; border: 2px dashed #2D6F4B; display: none; background: #000; touch-action: manipulation; }
-    #reader video { width: 100% !important; height: 100% !important; object-fit: cover !important; transition: transform 0.3s ease-out; transform-origin: center center; }
+    /* GIAO DIỆN QUÉT MÃ QR TỐI ƯU */
+    #reader { position: relative; width: 100%; height: 350px; margin-top: 15px; border-radius: 12px; overflow: hidden; border: 2px dashed #2D6F4B; display: none; background: #000; touch-action: manipulation; }
+    #reader video { width: 100% !important; height: 100% !important; object-fit: cover !important; }
     
     /* Box nháy màu để chỉ báo đang lấy nét */
     .focus-box {
       position: absolute; width: 60px; height: 60px; border: 2px solid #00ff00;
       border-radius: 8px; pointer-events: none; transform: translate(-50%, -50%);
-      animation: focus-pulse 0.4s ease-out; z-index: 1000;
-      box-shadow: 0 0 8px rgba(0, 255, 0, 0.5);
+      animation: focus-pulse 0.4s ease-out; z-index: 1000; box-shadow: 0 0 8px rgba(0, 255, 0, 0.5);
     }
     @keyframes focus-pulse {
       0% { transform: translate(-50%, -50%) scale(1.4); opacity: 0; }
@@ -86,7 +81,6 @@
       100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
     }
     
-    /* Nút báo mức zoom & Đổi Camera */
     #zoom-badge {
       position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.65);
       color: #00ff66; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 0.9rem;
@@ -400,6 +394,7 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 
 <script>
+  // ĐẢM BẢO URL NÀY ĐÃ ĐƯỢC DEPLOY "NEW VERSION" TỪ GOOGLE SCRIPT
   const API_URL = "https://script.google.com/macros/s/AKfycbwrtLgAK-djLst91t_7vz3q8743IHIJavF9rZ8e8B42e9qacetq3-hIiJrfT5DEUb_aXg/exec";
 
   async function callGoogleAPI(actionName, payloadData = null) {
@@ -428,7 +423,7 @@
   let isSubmitting = false; 
   
   // -------------------------------------------------------------
-  // CAMERA SCANNER VARIABLES & SETUP
+  // BIẾN CHO HỆ THỐNG CAMERA
   // -------------------------------------------------------------
   let html5QrCodeScannerInstance = null;
   let availableCameras = [];
@@ -459,10 +454,10 @@
   };
 
   // -------------------------------------------------------------
-  // XỬ LÝ CAMERA: ĐỔI CAM, LẤY NÉT CHẠM, ZOOM TỰ ĐỘNG
+  // XỬ LÝ CAMERA: ĐỔI CAM, ZOOM 0.5x, LẤY NÉT CHẠM
   // -------------------------------------------------------------
   
-  // 1. Áp dụng Zoom qua API (nếu hỗ trợ) hoặc CSS (nếu không hỗ trợ)
+  // 1. Áp dụng Zoom (Tăng dần 0.5x)
   async function applyCameraZoom() {
       try {
           const video = document.querySelector('#reader video');
@@ -471,21 +466,17 @@
               const caps = track.getCapabilities();
               
               if (caps.zoom) {
-                  // Dùng zoom quang học của thiết bị (an toàn đến 3.0x)
+                  // Giới hạn max theo phần cứng, hoặc trần 3.0x
                   let safeZoom = Math.min(window.currentZoom, caps.zoom.max || 3.0);
                   await track.applyConstraints({ advanced: [{ focusMode: "continuous", zoom: safeZoom }] });
-                  video.style.transform = `scale(1)`; // Reset CSS vì đã dùng phần cứng
               } else {
-                  // Fallback: Nếu thiết bị dốt (chặn API zoom), dùng CSS để người dùng dễ nhìn
-                  video.style.transform = `scale(${window.currentZoom})`;
+                  // Fallback kích hoạt focus nếu máy không hỗ trợ zoom API
                   await track.applyConstraints({ advanced: [{ focusMode: "continuous" }] });
               }
           }
-      } catch(err) {
-          // Bất chấp lỗi phần cứng, vẫn kích hoạt CSS zoom để hỗ trợ tầm nhìn
-          const video = document.querySelector('#reader video');
-          if (video) video.style.transform = `scale(${window.currentZoom})`;
-      }
+      } catch(err) { console.log("Không thể ép API phần cứng:", err); }
+      
+      // Hiển thị giao diện mức zoom
       document.getElementById('zoom-text').innerText = window.currentZoom.toFixed(1) + "x";
       document.getElementById('zoom-badge').style.display = 'block';
   }
@@ -493,7 +484,7 @@
   // 2. Chạm màn hình để đổi Zoom & Lấy nét lại
   const readerElement = document.getElementById('reader');
   readerElement.addEventListener('click', (e) => {
-      // Bỏ qua nếu bấm trúng nút Đổi Cam
+      // Chặn sự kiện nếu bấm vào nút Đổi Camera
       if(e.target.id === 'btn-switch-cam' || e.target.closest('#btn-switch-cam')) return;
 
       const rect = readerElement.getBoundingClientRect();
@@ -507,14 +498,30 @@
       readerElement.appendChild(focusBox);
       setTimeout(() => focusBox.remove(), 450);
 
-      // Xoay vòng zoom mỗi bước 0.5x (1.0 -> 3.0 -> 1.0)
+      // Tăng mức Zoom lên 0.5 mỗi lần chạm (Quay vòng 1.0 -> 3.0)
       window.currentZoom += 0.5;
-      if(window.currentZoom > 3.0) window.currentZoom = 1.0;
-      
+      if(window.currentZoom > 3.0) {
+          window.currentZoom = 1.0;
+      }
       applyCameraZoom();
   });
 
-  // 3. Khởi chạy quét
+  // 3. Nút đổi Camera
+  function switchCamera(event) {
+      event.stopPropagation(); // Không cho kích hoạt sự kiện zoom
+      if (availableCameras.length <= 1) return;
+      
+      currentCameraIndex = (currentCameraIndex + 1) % availableCameras.length;
+      document.getElementById('qrStatus').innerHTML = '<span class="text-primary fw-bold"><i class="bi bi-arrow-repeat"></i> Đang đổi ống kính camera...</span>';
+      
+      html5QrCodeScannerInstance.stop().then(() => {
+          startScanner(availableCameras[currentCameraIndex].id);
+      }).catch(err => {
+          startScanner(availableCameras[currentCameraIndex].id);
+      });
+  }
+
+  // 4. Khởi chạy quét
   function promptQRScan() {
       if(!document.getElementById('typeCCCD').checked && !document.getElementById('typeCC').checked) {
           alert('Vui lòng chọn Loại thẻ định danh trước khi quét Mã CCCD!');
@@ -527,12 +534,13 @@
 
       if (!html5QrCodeScannerInstance) html5QrCodeScannerInstance = new Html5Qrcode("reader");
 
-      // Lấy danh sách camera trước
+      // Quét xem máy có bao nhiêu camera
       Html5Qrcode.getCameras().then(cameras => {
           if (cameras && cameras.length > 0) {
               availableCameras = cameras;
-              // Ưu tiên camera sau (back) nếu có
-              let backCamIndex = cameras.findIndex(c => c.label.toLowerCase().includes('back') || c.label.toLowerCase().includes('sau'));
+              
+              // Tìm camera chính phía sau
+              let backCamIndex = cameras.findIndex(c => c.label.toLowerCase().includes('back') || c.label.toLowerCase().includes('sau') || c.label.toLowerCase().includes('0'));
               currentCameraIndex = backCamIndex !== -1 ? backCamIndex : cameras.length - 1;
               
               if(cameras.length > 1) {
@@ -540,24 +548,31 @@
               }
               startScanner(cameras[currentCameraIndex].id);
           } else {
-              startScanner({ facingMode: "environment" }); // Fallback
+              startScanner({ facingMode: "environment" });
           }
       }).catch(err => {
           startScanner({ facingMode: "environment" });
       });
   }
 
-  // 4. Hàm thực thi mở luồng Camera cụ thể
+  // 5. Mở luồng Video cụ thể
   function startScanner(cameraIdOrConfig) {
-      // Cấu hình chuẩn 4K để đảm bảo zoom kỹ thuật số không mờ
+      // Ép khung 1080p, bật Native API (BarcodeDetector) siêu nhạy
       const config = {
           fps: 15, 
-          qrbox: { width: 250, height: 250 },
-          aspectRatio: 1.0, 
-          useBarCodeDetectorIfSupported: true, 
+          // Cho phép quét toàn màn hình để bắt CCCD dễ hơn
+          qrbox: function(viewfinderWidth, viewfinderHeight) {
+              let size = Math.min(viewfinderWidth, viewfinderHeight) * 0.9; 
+              return { width: size, height: size };
+          },
+          experimentalFeatures: {
+              useBarCodeDetectorIfSupported: true // Rất quan trọng cho thẻ CCCD
+          },
+          formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ],
           videoConstraints: {
-              width: { ideal: 3840 },
-              height: { ideal: 2160 }
+              width: { ideal: 1920, min: 1080 },
+              height: { ideal: 1080, min: 720 },
+              focusMode: "continuous"
           }
       };
 
@@ -574,26 +589,10 @@
           setTimeout(() => {
               window.currentZoom = 1.0; 
               applyCameraZoom();
-          }, 300); 
+          }, 400); 
       }).catch((err) => {
           document.getElementById('qrStatus').innerHTML = '<div class="alert alert-danger py-1 mt-2">Lỗi: Không thể mở camera. Vui lòng cấp quyền hoặc thử trình duyệt khác.</div>';
           hideScannerUI();
-      });
-  }
-
-  // 5. Nút đổi camera (chuyển đổi qua lại giữa nhiều ống kính trên điện thoại)
-  function switchCamera(event) {
-      event.stopPropagation(); // Không kích hoạt hiệu ứng chạm zoom khi bấm nút này
-      if (availableCameras.length <= 1) return;
-      
-      currentCameraIndex = (currentCameraIndex + 1) % availableCameras.length;
-      
-      document.getElementById('qrStatus').innerHTML = '<span class="text-primary fw-bold"><i class="bi bi-arrow-repeat"></i> Đang đổi camera...</span>';
-      
-      html5QrCodeScannerInstance.stop().then(() => {
-          startScanner(availableCameras[currentCameraIndex].id);
-      }).catch(err => {
-          startScanner(availableCameras[currentCameraIndex].id);
       });
   }
 
