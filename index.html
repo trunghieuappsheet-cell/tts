@@ -1,7 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
-  <base target="_top">
+  <meta charset="UTF-8">
+  <title>Thông tin thực tập sinh - BIMGroup</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
@@ -411,6 +413,36 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 
 <script>
+  // =========================================================
+  // THAY LINK NÀY BẰNG URL BẠN VỪA DEPLOY TỪ GOOGLE SCRIPT
+  // =========================================================
+  const API_URL = "https://script.google.com/macros/s/AKfycbwrtLgAK-djLst91t_7vz3q8743IHIJavF9rZ8e8B42e9qacetq3-hIiJrfT5DEUb_aXg/exec";
+
+  // Hàm gọi API thay thế cho google.script.run
+  async function callGoogleAPI(actionName, payloadData = null) {
+      try {
+          let response = await fetch(API_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+              body: JSON.stringify({ action: actionName, payload: payloadData })
+          });
+          let result = await response.json();
+          if (result.success) {
+              return result.data;
+          } else {
+              throw new Error(result.error || "Unknown server error");
+          }
+      } catch (err) {
+          console.error("API Error:", err);
+          throw err;
+      }
+  }
+
+  // Đọc params cccd từ URL
+  const urlParams = new URLSearchParams(window.location.search);
+  window.urlCccdParam = urlParams.get('cccd') || "";
+
+
   let cropper; let currentTarget = ''; let croppedFiles = { avatar: null, front: null, back: null, plate: null }; let globalTimerInterval; 
   let isCheckingDuplicatePlate = false; let isPlateDuplicate = false;
   let isSubmitting = false; 
@@ -421,13 +453,16 @@
     document.getElementById('typeCC').checked = false;
     
     refreshFormClassOptions(); 
-    google.script.run.withSuccessHandler(function(settings) { applyLockState(settings.manualLock, settings.expireTime); }).getLockSettings();
+    
+    callGoogleAPI('getLockSettings').then(settings => {
+        applyLockState(settings.manualLock, settings.expireTime);
+    }).catch(err => console.error("Lỗi lấy cấu hình khóa:", err));
     
     if (window.urlCccdParam && window.urlCccdParam.trim() !== "") {
       document.getElementById('main-form-content').style.display = 'none';
       document.getElementById('urlInitLoader').style.display = 'block';
       
-      google.script.run.withSuccessHandler(function(existingData) {
+      callGoogleAPI('checkCCCD', {cccd: window.urlCccdParam}).then(existingData => {
         document.getElementById('urlInitLoader').style.display = 'none';
         document.getElementById('main-form-content').style.display = 'block';
         if (existingData) {
@@ -436,7 +471,7 @@
         } else {
           alert("Không tìm thấy dữ liệu cũ khớp với số CCCD từ email!");
         }
-      }).checkCCCD(window.urlCccdParam);
+      }).catch(err => alert("Lỗi khi kết nối đến máy chủ."));
     }
   };
 
@@ -464,9 +499,7 @@
                   processQRData(decodedText);
               }).catch(err => { console.error("Failed to stop scanner", err); });
           },
-          (errorMessage) => {
-              // ignore continuous scanning errors
-          }
+          (errorMessage) => { }
       ).catch((err) => {
           document.getElementById('qrStatus').innerHTML = '<div class="alert alert-danger py-1 mt-2">Lỗi: Không thể mở camera. Vui lòng cấp quyền hoặc thử trình duyệt khác.</div>';
           document.getElementById('reader').style.display = 'none';
@@ -522,7 +555,8 @@
           }
 
           statusDiv.innerHTML = '<span class="text-primary fw-bold"><i class="bi bi-arrow-repeat"></i> Đang kiểm tra lịch sử...</span>';
-          google.script.run.withSuccessHandler(function(existingData) {
+          
+          callGoogleAPI('checkCCCD', {cccd: parts[0]}).then(existingData => {
              if (existingData) {
                 fillFormWithExistingData(existingData);
                 statusDiv.innerHTML = '<div class="alert alert-warning py-1 mt-2 mb-0"><i class="bi bi-pencil-square"></i> Đã tải lịch sử đăng ký cũ. Sẵn sàng Cập nhật.</div>';
@@ -530,9 +564,9 @@
                 document.getElementById('editRowId').value = ""; toggleImageRequired(false); 
                 statusDiv.innerHTML = '<div class="alert alert-success py-1 mt-2 mb-0"><i class="bi bi-check-circle"></i> Quét mới thành công.</div>';
              }
-          }).withFailureHandler(function(err) {
+          }).catch(err => {
              statusDiv.innerHTML = '<div class="alert alert-danger py-1 mt-2 mb-0"><i class="bi bi-exclamation-triangle"></i> Lỗi truy xuất: ' + err.message + '</div>';
-          }).checkCCCD(parts[0]);
+          });
       } else {
           statusDiv.innerHTML = '<div class="alert alert-danger py-1 mt-2">Lỗi: Định dạng QR không hợp lệ.</div>';
       }
@@ -556,18 +590,18 @@
   }
 
   function refreshFormClassOptions() {
-      google.script.run.withSuccessHandler(function(codes) {
+      callGoogleAPI('getClassCodesForForm').then(codes => {
           var select = document.getElementById('classCode');
           var currVal = select.value;
           select.innerHTML = '<option value="" selected disabled>Chọn mã lớp</option>';
           codes.forEach(c => { select.innerHTML += `<option value="${c}">${c}</option>`; });
           if(currVal && codes.includes(currVal)) select.value = currVal;
-      }).getClassCodesForForm();
+      }).catch(err => console.error(err));
   }
 
   function loadAdminClasses() {
       document.getElementById('adminClassTbody').innerHTML = '<tr><td colspan="5" class="text-center py-3"><div class="spinner-border text-primary spinner-border-sm"></div></td></tr>';
-      google.script.run.withSuccessHandler(function(classes) {
+      callGoogleAPI('getAdminClassCodes').then(classes => {
           let html = '';
           classes.forEach(c => {
               let checked = c.visible ? 'checked' : '';
@@ -587,7 +621,7 @@
               </tr>`;
           });
           document.getElementById('adminClassTbody').innerHTML = html || '<tr><td colspan="5" class="text-center text-muted py-3">Chưa có mã lớp nào được cài đặt</td></tr>';
-      }).getAdminClassCodes();
+      }).catch(err => console.error(err));
   }
 
   function addNewInlineClass() {
@@ -620,54 +654,75 @@
       if (!code) return alert('Vui lòng nhập Mã lớp!');
       
       let isNew = String(rowId).startsWith('new_');
-      let payload = { row: isNew ? '' : rowId, code: code, name: name, qty: qty, visible: visible };
-      let action = isNew ? 'ADD' : 'EDIT';
+      let payloadData = { row: isNew ? '' : rowId, code: code, name: name, qty: qty, visible: visible };
+      let actionType = isNew ? 'ADD' : 'EDIT';
       
       let btn = event.currentTarget;
       let originalHtml = btn.innerHTML;
       btn.innerHTML = '<span class="spinner-border spinner-border-sm" style="width: 1rem; height: 1rem;"></span>';
       btn.disabled = true;
       
-      google.script.run.withSuccessHandler(res => {
+      callGoogleAPI('saveAdminClassCode', {
+          action: actionType, 
+          data: payloadData, 
+          password: document.getElementById('adminPassword').value
+      }).then(res => {
           alert(res.message);
           loadAdminClasses(); 
           refreshFormClassOptions();
-      }).withFailureHandler(err => {
+      }).catch(err => {
           btn.innerHTML = originalHtml; btn.disabled = false;
           alert('Lỗi: ' + err.message);
-      }).saveAdminClassCode(action, payload, document.getElementById('adminPassword').value);
+      });
   }
 
   function deleteAdminClass(row, code) {
       if(!confirm(`Bạn có chắc muốn xóa vĩnh viễn mã lớp: ${code}?`)) return;
       document.getElementById('adminClassTbody').innerHTML = '<tr><td colspan="5" class="text-center py-3"><div class="spinner-border text-primary spinner-border-sm"></div></td></tr>';
-      google.script.run.withSuccessHandler(res => {
+      
+      callGoogleAPI('saveAdminClassCode', {
+          action: 'DELETE', 
+          data: {row: row}, 
+          password: document.getElementById('adminPassword').value
+      }).then(res => {
           loadAdminClasses(); refreshFormClassOptions();
-      }).saveAdminClassCode('DELETE', {row: row}, document.getElementById('adminPassword').value);
+      }).catch(err => alert("Lỗi: " + err.message));
   }
 
   const authModal = new bootstrap.Modal(document.getElementById('authModal')); const settingsModal = new bootstrap.Modal(document.getElementById('settingsModal'));
+  
   function openAdminAuth() { document.getElementById('adminPassword').value = ''; document.getElementById('authError').style.display = 'none'; authModal.show(); }
+  
   function verifyAdmin() { 
       if(document.getElementById('adminPassword').value==="HRPQ") { 
           authModal.hide(); 
-          google.script.run.withSuccessHandler(function(s) { 
+          callGoogleAPI('getLockSettings').then(s => {
               document.getElementById('toggleManualLock').checked = s.manualLock; 
               document.getElementById('inputExpireTime').value = s.expireTime; 
-          }).getLockSettings(); 
+          });
           loadAdminClasses();
           settingsModal.show(); 
       } else { 
           document.getElementById('authError').style.display = 'block'; 
       } 
   }
+
   function saveSettings() { 
       const btn = document.getElementById('btnSaveSettings'); btn.innerHTML = 'Đang lưu...'; btn.disabled = true; 
-      google.script.run.withSuccessHandler(function(res) { 
+      
+      callGoogleAPI('saveLockSettings', {
+          settings: { manualLock: document.getElementById('toggleManualLock').checked, expireTime: document.getElementById('inputExpireTime').value },
+          password: document.getElementById('adminPassword').value
+      }).then(res => {
           btn.innerHTML = 'Lưu cài đặt khóa form'; btn.disabled = false; 
-          if(res.success) { alert(res.message); applyLockState(document.getElementById('toggleManualLock').checked, document.getElementById('inputExpireTime').value); } 
-          else { alert(res.message); } 
-      }).saveLockSettings({ manualLock: document.getElementById('toggleManualLock').checked, expireTime: document.getElementById('inputExpireTime').value }, document.getElementById('adminPassword').value); 
+          if(res.success) { 
+              alert(res.message); 
+              applyLockState(document.getElementById('toggleManualLock').checked, document.getElementById('inputExpireTime').value); 
+          } else { alert(res.message); } 
+      }).catch(err => {
+          btn.innerHTML = 'Lưu cài đặt khóa form'; btn.disabled = false; 
+          alert("Lỗi lưu cấu hình: " + err.message);
+      });
   }
 
   function checkExpiration() {
@@ -723,7 +778,11 @@
     const readerBase64 = new FileReader();
     readerBase64.onload = () => { 
         croppedFiles.plate = readerBase64.result.split(',')[1]; 
-        google.script.run.withSuccessHandler(res => {
+        
+        callGoogleAPI('analyzeLicensePlateWithGemini', {
+            base64: croppedFiles.plate,
+            mimeType: file.type
+        }).then(res => {
             if(res.error) {
                 status.innerHTML = "❌ Lỗi: " + res.error; 
                 status.className = "small fw-bold text-danger mt-1";
@@ -735,16 +794,20 @@
                 toggleVehicleType();
                 status.innerHTML = "⏳ Đang đối chiếu trùng lặp...";
                 isCheckingDuplicatePlate = true;
-                google.script.run.withSuccessHandler(function(isDup) {
+                
+                callGoogleAPI('checkDuplicateLicensePlate', { plate: res.licensePlate }).then(isDup => {
                     isCheckingDuplicatePlate = false; isPlateDuplicate = isDup;
                     if (isDup) { status.innerHTML = "❌ CẢNH BÁO TRÙNG: Biển số " + res.licensePlate + " đã tồn tại!"; status.className = "small fw-bold text-danger mt-1"; } 
                     else { status.innerHTML = "✅ AI nhận diện: " + res.licensePlate; status.className = "small fw-bold text-success mt-1"; }
-                }).checkDuplicateLicensePlate(res.licensePlate);
+                });
             } else {
                 status.innerHTML = "⚠️ Không nhận diện rõ biển số. Vui lòng chụp lại ảnh rõ nét hơn.";
                 status.className = "small fw-bold text-warning mt-1";
             }
-        }).analyzeLicensePlateWithGemini(readerBase64.result.split(',')[1], file.type);
+        }).catch(err => {
+            status.innerHTML = "❌ Lỗi kết nối: " + err.message;
+            status.className = "small fw-bold text-danger mt-1";
+        });
     };
     readerBase64.readAsDataURL(file);
   }
@@ -909,14 +972,12 @@ function fillFormWithExistingData(existingData) {
       avatarBase64: croppedFiles.avatar, frontImageBase64: croppedFiles.front, backImageBase64: croppedFiles.back, plateImageBase64: croppedFiles.plate
     };
 
-    google.script.run.withSuccessHandler(function(responseRaw) {
+    callGoogleAPI('processForm', {formData: formData}).then(resObj => {
       clearInterval(timer);
-      
       isSubmitting = false;
       btnSubmit.disabled = false;
       btnSubmit.innerHTML = '<i class="bi bi-cloud-arrow-up-fill"></i> GỬI THÔNG TIN ĐĂNG KÝ';
 
-      let resObj = JSON.parse(responseRaw);
       if (resObj.message.startsWith("LỖI:")) {
         progressBar.classList.add('bg-danger'); progressText.classList.replace('text-success', 'text-danger');
         progressText.innerText = 'Lỗi!'; alert(resObj.message); document.getElementById('loader').style.display = 'none'; return;
@@ -943,11 +1004,11 @@ function fillFormWithExistingData(existingData) {
 
         document.getElementById('main-form-content').style.display = 'none'; document.getElementById('review-content').style.display = 'block'; window.scrollTo(0, 0);
       }, 500);
-    }).withFailureHandler(function(err) {
+    }).catch(err => {
       clearInterval(timer); 
       isSubmitting = false; btnSubmit.disabled = false; btnSubmit.innerHTML = '<i class="bi bi-cloud-arrow-up-fill"></i> GỬI THÔNG TIN ĐĂNG KÝ';
       progressBar.classList.add('bg-danger'); progressText.innerText = 'Lỗi Server: ' + err.message; alert("Lỗi: " + err.message); document.getElementById('loader').style.display = 'none';
-    }).processForm(formData);
+    });
   }
 
   function applyLockState(isManualLock, expireTimeStr) { 
@@ -1001,7 +1062,7 @@ function fillFormWithExistingData(existingData) {
         statusDiv.innerHTML = '<span class="text-primary"><i class="bi bi-hourglass-split"></i> AI đang kiểm duyệt nền ảnh thẻ...</span>';
         document.getElementById('btnSubmitForm').disabled = true;
 
-        google.script.run.withSuccessHandler(res => {
+        callGoogleAPI('analyzeAvatarWithGemini', { base64: croppedFiles.avatar }).then(res => {
             document.getElementById('btnSubmitForm').disabled = false;
             
             if(res.error) {
@@ -1018,7 +1079,10 @@ function fillFormWithExistingData(existingData) {
             } else {
                 statusDiv.innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill"></i> Ảnh hợp lệ chuẩn phông thẻ.</span>';
             }
-        }).analyzeAvatarWithGemini(croppedFiles.avatar);
+        }).catch(err => {
+            document.getElementById('btnSubmitForm').disabled = false;
+            statusDiv.innerHTML = '<span class="text-danger fw-bold"><i class="bi bi-x-circle-fill"></i> Lỗi kết nối AI.</span>';
+        });
     } 
     else if (currentTarget === 'front' || currentTarget === 'back') {
         const statusDiv = document.getElementById(currentTarget + 'Status');
@@ -1027,7 +1091,7 @@ function fillFormWithExistingData(existingData) {
         statusDiv.innerHTML = '<span class="text-primary"><i class="bi bi-hourglass-split"></i> AI đang kiểm tra ' + sideNameStr.toLowerCase() + '...</span>';
         document.getElementById('btnSubmitForm').disabled = true;
 
-        google.script.run.withSuccessHandler(res => {
+        callGoogleAPI('analyzeCCCDWithGemini', { base64: croppedFiles[currentTarget], side: sideNameStr }).then(res => {
             document.getElementById('btnSubmitForm').disabled = false;
             
             if(res.error) {
@@ -1043,7 +1107,10 @@ function fillFormWithExistingData(existingData) {
             } else {
                 statusDiv.innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill"></i> Ảnh hợp lệ.</span>';
             }
-        }).analyzeCCCDWithGemini(croppedFiles[currentTarget], sideNameStr);
+        }).catch(err => {
+            document.getElementById('btnSubmitForm').disabled = false;
+            statusDiv.innerHTML = '<span class="text-danger fw-bold"><i class="bi bi-x-circle-fill"></i> Lỗi kết nối AI.</span>';
+        });
     }
 
     bootstrap.Modal.getInstance(document.getElementById('cropModal')).hide(); 
@@ -1053,7 +1120,8 @@ function fillFormWithExistingData(existingData) {
   
   function loadSubmittedList() { 
       document.getElementById('listLoader').style.display='block'; document.getElementById('submittedTable').style.display='none'; document.getElementById('summaryTableContainer').style.display='none'; 
-      google.script.run.withSuccessHandler(function(res){ 
+      
+      callGoogleAPI('getSubmittedData').then(res => { 
           document.getElementById('listLoader').style.display='none'; document.getElementById('submittedTable').style.display='table'; document.getElementById('summaryTableContainer').style.display='block'; 
           const stats = res.stats; const dataList = res.list; let otherCount = 0; 
           
@@ -1099,8 +1167,9 @@ function fillFormWithExistingData(existingData) {
               }); 
               tbody.innerHTML = tbodyHtml; 
           } else { tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-3">Chưa có dữ liệu</td></tr>'; } 
-      }).getSubmittedData(); 
+      }).catch(err => alert("Lỗi tải danh sách: " + err.message)); 
   }
+
   function exportExcel() { var tableList = document.getElementById("submittedTable"); var tableSum = document.getElementById("summaryTableContainer").querySelector("table"); if (!tableList || tableList.style.display === 'none' || tableList.rows.length <= 1) { alert("Chưa có dữ liệu để xuất!"); return; } var wb = XLSX.utils.book_new(); if (tableSum) { var wsSum = XLSX.utils.table_to_sheet(tableSum, {raw: true}); XLSX.utils.book_append_sheet(wb, wsSum, "ThongKe"); } var wsList = XLSX.utils.table_to_sheet(tableList, {raw: true}); var range = XLSX.utils.decode_range(wsList['!ref']); for (var R = 1; R <= range.e.r; ++R) { var rowElement = tableList.rows[R]; if (!rowElement || rowElement.classList.contains('group-header')) continue; [2, 3].forEach(c => { var cell = wsList[XLSX.utils.encode_cell({c: c, r: R})]; if (cell && cell.v) { cell.v = "'" + cell.v; cell.t = "s"; } }); if (rowElement.getAttribute('data-duplicate') === 'true') { for (var C = 0; C <= range.e.c; ++C) { var cellRef = XLSX.utils.encode_cell({c: C, r: R}); if (!wsList[cellRef]) wsList[cellRef] = { t: "s", v: "" }; wsList[cellRef].s = { fill: { fgColor: { rgb: "FF8B0000" } }, font: { color: { rgb: "FFFFFFFF" }, bold: true } }; } } } XLSX.utils.book_append_sheet(wb, wsList, "DanhSach"); XLSX.writeFile(wb, "DanhSach_ThucTapSinh.xlsx"); }
 </script>
 </body>
