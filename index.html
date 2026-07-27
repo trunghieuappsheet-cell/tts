@@ -382,7 +382,7 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 
 <script>
-  // URL TỪ GOOGLE SCRIPT MỚI NHẤT
+  // URL TỪ GOOGLE SCRIPT MỚI NHẤT (Chắc chắn bạn đã Deploy as Web App -> New Version)
   const API_URL = "https://script.google.com/macros/s/AKfycbwrtLgAK-djLst91t_7vz3q8743IHIJavF9rZ8e8B42e9qacetq3-hIiJrfT5DEUb_aXg/exec";
 
   async function callGoogleAPI(actionName, payloadData = null) {
@@ -410,6 +410,7 @@
   let isCheckingDuplicatePlate = false; let isPlateDuplicate = false;
   let isSubmitting = false; 
   let html5QrCodeScannerInstance = null;
+  window.currentZoom = 1.0; // Biến theo dõi mức zoom hiện tại
 
   window.onload = function() {
     document.getElementById('typeCCCD').checked = false;
@@ -435,16 +436,17 @@
   };
 
   // -------------------------------------------------------------
-  // THUẬT TOÁN QUÉT QR & LẤY NÉT CHẠM GIỐNG GOOGLE LENS (AUTO ZOOM 2.5X)
+  // THUẬT TOÁN QUÉT QR & LẤY NÉT CHẠM KẾT HỢP ZOOM
   // -------------------------------------------------------------
   const readerElement = document.getElementById('reader');
   
-  // Sự kiện CHẠM ĐỂ LẤY NÉT & THAY ĐỔI ZOOM
+  // Sự kiện CHẠM ĐỂ LẤY NÉT & ĐỔI ZOOM
   readerElement.addEventListener('click', async (e) => {
       const rect = readerElement.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
       
+      // UX Box xanh nhấp nháy
       let focusBox = document.createElement('div');
       focusBox.className = 'focus-box';
       focusBox.style.left = x + 'px';
@@ -459,21 +461,26 @@
                   const track = video.srcObject.getVideoTracks()[0];
                   const caps = track.getCapabilities();
                   
+                  // Chỉ áp dụng đổi zoom nếu phần cứng thực sự hỗ trợ
                   if (caps.zoom) {
-                      let zMin = caps.zoom.min || 1;
-                      let zMax = caps.zoom.max || 4;
-                      // Xoay vòng zoom khi chạm: Tăng thêm 1.0, nếu vượt ngưỡng thì về lại min
-                      window.currentZoom = (window.currentZoom || 2.5) + 1.0;
-                      if(window.currentZoom > Math.min(zMax, 5)) window.currentZoom = Math.max(zMin, 1.5);
+                      let zMin = caps.zoom.min || 1.0;
+                      let zMax = Math.min(caps.zoom.max || 3.0, 2.5); // Max 2.5x để không bị vỡ ảnh kỹ thuật số quá mức
+                      
+                      // Mỗi lần chạm: Tăng zoom lên 0.5. Quá ngưỡng thì vòng về mức mặc định 1x
+                      window.currentZoom += 0.5;
+                      if(window.currentZoom > zMax) {
+                          window.currentZoom = 1.0; // Trở về mức rộng và rõ nhất
+                      }
                       
                       await track.applyConstraints({ 
                           advanced: [{ focusMode: "continuous", zoom: window.currentZoom }] 
                       });
                   } else {
+                      // Nếu máy không có API chỉnh zoom, chỉ kích hoạt lại bộ lấy nét
                       await track.applyConstraints({ advanced: [{ focusMode: "continuous" }] });
                   }
               }
-          } catch(err) { console.log("Thiết bị không hỗ trợ ép nét thủ công."); }
+          } catch(err) { console.log("Thiết bị không cho phép chỉnh API focus/zoom thủ công."); }
       }
   });
 
@@ -485,19 +492,19 @@
       
       document.getElementById('reader').style.display = 'block';
       document.getElementById('btn-cancel-scan').style.display = 'block';
-      document.getElementById('qrStatus').innerHTML = '<span class="text-primary fw-bold"><i class="bi bi-camera"></i> Đang mở camera... (Chạm để lấy nét nếu mờ)</span>';
+      document.getElementById('qrStatus').innerHTML = '<span class="text-primary fw-bold"><i class="bi bi-camera"></i> Đang mở camera... (Cách xa 10cm, chạm màn hình nếu bị mờ)</span>';
 
       if (!html5QrCodeScannerInstance) html5QrCodeScannerInstance = new Html5Qrcode("reader");
 
-      // Bật lõi Machine Learning Native (nếu trình duyệt/HĐH hỗ trợ) + Độ phân giải Full HD
+      // Bật Native API (như Google Lens) và ép độ phân giải Full HD (để có thể quét rõ mà không cần ép zoom ảo ngay lập tức gây mờ)
       const config = {
           fps: 15, 
           qrbox: { width: 250, height: 250 },
           aspectRatio: 1.0, 
-          useBarCodeDetectorIfSupported: true, // NATIVE API như Google Lens
+          useBarCodeDetectorIfSupported: true, 
           videoConstraints: {
               facingMode: "environment",
-              width: { ideal: 1920 }, // Độ phân giải cao
+              width: { ideal: 1920 },
               height: { ideal: 1080 }
           }
       };
@@ -513,25 +520,20 @@
           },
           (errorMessage) => { }
       ).then(() => {
-          // ================= AUTO ZOOM 2.5x NGAY SAU KHI KHỞI ĐỘNG =================
+          // Bắt đầu luồng video -> Thiết lập cấu hình mặc định (Xóa ép zoom 2.5 ngay từ đầu để tránh mờ)
           setTimeout(async () => {
               try {
                   const video = document.querySelector('#reader video');
                   if (!video || !video.srcObject) return;
                   const track = video.srcObject.getVideoTracks()[0];
-                  const caps = track.getCapabilities();
                   
-                  if (caps.zoom) {
-                      // Ép zoom quang học vào mức 2.5x ngay từ đầu (hoặc tối đa theo phần cứng)
-                      window.currentZoom = Math.min(caps.zoom.max, Math.max(caps.zoom.min, 2.5));
-                      await track.applyConstraints({ 
-                          advanced: [{ zoom: window.currentZoom, focusMode: "continuous" }] 
-                      });
-                  } else {
-                      await track.applyConstraints({ advanced: [{ focusMode: "continuous" }] });
-                  }
-              } catch(e) { console.log("Không thể ép auto-zoom 2.5x ban đầu:", e); }
-          }, 500); // Trì hoãn 0.5s để đảm bảo video stream đã chạy mượt
+                  // Đặt mặc định về 1.0 (chuẩn nét nhất) và ép ống kính lấy nét liên tục
+                  window.currentZoom = 1.0; 
+                  await track.applyConstraints({ 
+                      advanced: [{ focusMode: "continuous" }] 
+                  });
+              } catch(e) { console.log("Không thể ép auto-focus:", e); }
+          }, 500); 
       }).catch((err) => {
           document.getElementById('qrStatus').innerHTML = '<div class="alert alert-danger py-1 mt-2">Lỗi: Không thể mở camera. Vui lòng cấp quyền hoặc thử trình duyệt khác.</div>';
           document.getElementById('reader').style.display = 'none';
