@@ -69,28 +69,44 @@
     .review-img-wrap { display: inline-block; margin: 8px; text-align: center; vertical-align: top; }
     .review-img-wrap img { border: 1px solid #ddd; border-radius: 8px; object-fit: cover; box-shadow: 0 2px 5px rgba(0,0,0,0.05); background-color: #fafafa; }
 
-    /* CSS GIAO DIỆN LẤY NÉT CHẠM MÀN HÌNH */
-    #reader { position: relative; width: 100%; margin-top: 15px; border-radius: 8px; overflow: hidden; border: 2px dashed #2D6F4B; display: none; background: #000; }
-    #reader video { object-fit: cover; }
+    /* KHU VỰC CAMERA TỰ ĐỘNG ZOOM DÙNG CSS */
+    #reader {
+      position: relative;
+      width: 100%;
+      height: 320px;
+      margin-top: 15px;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 2px dashed #2D6F4B;
+      display: none;
+      background: #000;
+      touch-action: manipulation;
+    }
+    #reader video {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover !important;
+      transition: transform 0.25s ease-out; /* Zoom mượt mà */
+      transform-origin: center center;
+    }
     
-    /* Box nháy màu để chỉ báo đang lấy nét */
+    /* Hiệu ứng chạm lấy nét */
     .focus-box {
-      position: absolute; width: 60px; height: 60px; border: 2px solid #00ff00;
+      position: absolute; width: 55px; height: 50px; border: 2px solid #00ff66;
       border-radius: 8px; pointer-events: none; transform: translate(-50%, -50%);
-      animation: focus-pulse 0.5s ease-out; z-index: 1000;
-      box-shadow: 0 0 8px rgba(0, 255, 0, 0.5);
+      animation: focus-pulse 0.4s ease-out; z-index: 1000;
+      box-shadow: 0 0 10px rgba(0, 255, 102, 0.6);
     }
     @keyframes focus-pulse {
-      0% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+      0% { transform: translate(-50%, -50%) scale(1.4); opacity: 0; }
       50% { opacity: 1; border-color: #ffffff; }
       100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
     }
     
-    /* Nút báo mức zoom hiện tại */
-    #zoom-indicator {
-      position: absolute; bottom: 15px; right: 15px; background: rgba(0,0,0,0.6);
-      color: #fff; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.85rem;
-      pointer-events: none; z-index: 10; display: none;
+    #zoom-badge {
+      position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.65);
+      color: #00ff66; padding: 4px 10px; border-radius: 20px; font-weight: bold; font-size: 0.8rem;
+      pointer-events: none; z-index: 10; border: 1px solid rgba(0,255,102,0.4);
     }
   </style>
 </head>
@@ -142,7 +158,7 @@
       
       <!-- KHU VỰC CAMERA QUÉT QR -->
       <div id="reader">
-         <div id="zoom-indicator">1.0x</div>
+         <div id="zoom-badge"><i class="bi bi-search"></i> <span id="zoom-text">1.8x</span></div>
       </div>
       <button type="button" id="btn-cancel-scan" class="btn btn-danger btn-sm w-100 py-2 fw-bold mt-2" style="display: none;" onclick="cancelQRScan()">
         <i class="bi bi-x-circle"></i> HỦY QUÉT
@@ -420,7 +436,10 @@
   let isCheckingDuplicatePlate = false; let isPlateDuplicate = false;
   let isSubmitting = false; 
   let html5QrCodeScannerInstance = null;
-  window.currentZoom = 1.0; 
+  
+  // Danh sách các mức phóng to CSS mượt mà
+  const ZOOM_LEVELS = [1.8, 2.5, 1.0];
+  let zoomIndex = 0;
 
   window.onload = function() {
     document.getElementById('typeCCCD').checked = false;
@@ -446,11 +465,21 @@
   };
 
   // -------------------------------------------------------------
-  // THUẬT TOÁN QUÉT QR CHUẨN: FULL HD (4K) VÀ ZOOM LUÂN PHIÊN
+  // KỸ THUẬT PHÓNG TO KÍNH LÚP BẰNG CSS (KHÔNG LÀM VỠ HẠT/MỜ KHUNG HÌNH)
   // -------------------------------------------------------------
   const readerElement = document.getElementById('reader');
   
-  readerElement.addEventListener('click', async (e) => {
+  function applyCssZoom(scaleVal) {
+      const video = document.querySelector('#reader video');
+      if (video) {
+          video.style.transform = `scale(${scaleVal})`;
+          document.getElementById('zoom-text').innerText = scaleVal.toFixed(1) + "x";
+      }
+  }
+
+  // Sự kiện CHẠM VÀO MÀN HÌNH ĐỂ THAY ĐỔI MỨC ZOOM CSS
+  readerElement.addEventListener('click', (e) => {
+      // 1. Tạo hiệu ứng hình vuông màu xanh nhấp nháy
       const rect = readerElement.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
@@ -460,37 +489,21 @@
       focusBox.style.left = x + 'px';
       focusBox.style.top = y + 'px';
       readerElement.appendChild(focusBox);
-      setTimeout(() => focusBox.remove(), 500);
+      setTimeout(() => focusBox.remove(), 450);
 
+      // 2. Chuyển đổi mức Zoom CSS mượt mà (1.8x -> 2.5x -> 1.0x)
+      zoomIndex = (zoomIndex + 1) % ZOOM_LEVELS.length;
+      applyCssZoom(ZOOM_LEVELS[zoomIndex]);
+
+      // 3. Kích hoạt bộ autofocus phần cứng lại một lần
       if (html5QrCodeScannerInstance) {
           try {
               const video = document.querySelector('#reader video');
               if (video && video.srcObject) {
                   const track = video.srcObject.getVideoTracks()[0];
-                  const caps = track.getCapabilities();
-                  
-                  if (caps.zoom) {
-                      let zMin = caps.zoom.min || 1.0;
-                      let zMax = Math.min(caps.zoom.max || 4.0, 3.0); // Cho phép lên max 3.0x
-                      
-                      // Luân chuyển: 1.0 -> 1.5 -> 2.0 -> 2.5 -> 3.0 -> 1.0
-                      window.currentZoom += 0.5;
-                      if(window.currentZoom > zMax) {
-                          window.currentZoom = 1.0;
-                      }
-                      
-                      // Cập nhật UI hiển thị Zoom
-                      document.getElementById('zoom-indicator').innerText = window.currentZoom.toFixed(1) + "x";
-                      document.getElementById('zoom-indicator').style.display = 'block';
-
-                      await track.applyConstraints({ 
-                          advanced: [{ focusMode: "continuous", zoom: window.currentZoom }] 
-                      });
-                  } else {
-                      await track.applyConstraints({ advanced: [{ focusMode: "continuous" }] });
-                  }
+                  track.applyConstraints({ advanced: [{ focusMode: "continuous" }] });
               }
-          } catch(err) { console.log("Thiết bị không cho phép chỉnh API focus/zoom thủ công."); }
+          } catch(err) {}
       }
   });
 
@@ -502,20 +515,20 @@
       
       document.getElementById('reader').style.display = 'block';
       document.getElementById('btn-cancel-scan').style.display = 'block';
-      document.getElementById('qrStatus').innerHTML = '<span class="text-primary fw-bold"><i class="bi bi-camera"></i> Đang mở camera... <br><small class="text-muted">(Chạm vào màn hình để tự căn nét và Zoom)</small></span>';
+      document.getElementById('qrStatus').innerHTML = '<span class="text-primary fw-bold"><i class="bi bi-camera"></i> Đang mở camera... <br><small class="text-muted">(Chạm vào khung màn hình để đổi góc thu phóng)</small></span>';
 
       if (!html5QrCodeScannerInstance) html5QrCodeScannerInstance = new Html5Qrcode("reader");
 
-      // Bật Native API (như Google Lens) và ép độ phân giải tối đa (4K Ultra HD) để cắt crop điện tử (zoom) không bị vỡ ảnh
+      // Cấu hình quét độ phân giải Full HD gốc để giữ pixel cao nhất
       const config = {
           fps: 15, 
-          qrbox: { width: 250, height: 250 },
+          qrbox: { width: 220, height: 220 },
           aspectRatio: 1.0, 
           useBarCodeDetectorIfSupported: true, 
           videoConstraints: {
               facingMode: "environment",
-              width: { ideal: 3840 }, // Yêu cầu 4K
-              height: { ideal: 2160 }
+              width: { ideal: 1920 },
+              height: { ideal: 1080 }
           }
       };
 
@@ -525,25 +538,16 @@
               html5QrCodeScannerInstance.stop().then(() => {
                   document.getElementById('reader').style.display = 'none';
                   document.getElementById('btn-cancel-scan').style.display = 'none';
-                  document.getElementById('zoom-indicator').style.display = 'none';
                   processQRData(decodedText);
               }).catch(err => console.error("Failed to stop scanner", err));
           },
           (errorMessage) => { }
       ).then(() => {
-          setTimeout(async () => {
-              try {
-                  const video = document.querySelector('#reader video');
-                  if (!video || !video.srcObject) return;
-                  const track = video.srcObject.getVideoTracks()[0];
-                  window.currentZoom = 1.0; 
-                  document.getElementById('zoom-indicator').innerText = "1.0x";
-                  document.getElementById('zoom-indicator').style.display = 'block';
-                  await track.applyConstraints({ 
-                      advanced: [{ focusMode: "continuous" }] 
-                  });
-              } catch(e) { console.log("Không thể ép auto-focus:", e); }
-          }, 500); 
+          // Bật ngay Zoom CSS 1.8x mặc định sau khi luồng live hoạt động
+          setTimeout(() => {
+              zoomIndex = 0; // Mặc định 1.8x
+              applyCssZoom(ZOOM_LEVELS[zoomIndex]);
+          }, 300); 
       }).catch((err) => {
           document.getElementById('qrStatus').innerHTML = '<div class="alert alert-danger py-1 mt-2">Lỗi: Không thể mở camera. Vui lòng cấp quyền hoặc thử trình duyệt khác.</div>';
           document.getElementById('reader').style.display = 'none';
@@ -556,7 +560,6 @@
           html5QrCodeScannerInstance.stop().then(() => {
               document.getElementById('reader').style.display = 'none';
               document.getElementById('btn-cancel-scan').style.display = 'none';
-              document.getElementById('zoom-indicator').style.display = 'none';
               document.getElementById('qrStatus').innerHTML = '';
           }).catch(err => console.error(err));
       }
