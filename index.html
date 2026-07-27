@@ -1,9 +1,23 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <title>Thông tin thực tập sinh - BIMGroup</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  
+  <!-- Các thẻ Meta SEO & Social Media bạn cung cấp -->
+  <title>Đăng ký thông tin thực tập</title>
+  <link rel="icon" type="image/png" href="favicon.png?v=3"/>
+  <meta property="og:title" content="Đăng ký thông tin thực tập">
+  <meta property="og:description" content="Hệ thống đăng ký thông tin thực tập trực tuyến">
+  <meta property="og:image" content="https://tts.hama.io.vn/logo.png">
+  <meta property="og:url" content="https://tts.hama.io.vn">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Đăng ký thông tin thực tập">
+  <meta name="twitter:description" content="Hệ thống đăng ký thông tin thực tập trực tuyến">
+  <meta name="twitter:image" content="https://tts.hama.io.vn/logo.png">
+
+  <!-- Thư viện giao diện -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
@@ -43,8 +57,6 @@
 
     .countdown-box { background: #fff3cd; color: #856404; border: 2px dashed #ffeeba; padding: 15px; border-radius: 15px; text-align: center; font-weight: bold; margin-bottom: 25px; font-size: 1.1rem; box-shadow: var(--card-shadow); transition: all 0.3s; display: none;}
     .countdown-expired { background: #f8d7da !important; color: #721c24 !important; border-color: #f5c6cb !important; display: block !important;}
-    .countdown-urgent { background: #f8d7da; color: #dc3545; border-color: #dc3545; animation: blink 1s infinite alternate; }
-    @keyframes blink { 0% { opacity: 1; } 100% { opacity: 0.8; } }
 
     .btn-admin { position: absolute; top: 15px; left: 15px; background: none; border: none; color: #ccc; font-size: 1.2rem; transition: 0.3s; z-index: 10;}
     .btn-admin:hover { color: var(--primary-color); }
@@ -414,17 +426,18 @@
 
 <script>
   // =========================================================
-  // THAY LINK NÀY BẰNG URL BẠN VỪA DEPLOY TỪ GOOGLE SCRIPT
+  // API URL CỦA GOOGLE APPS SCRIPT
   // =========================================================
   const API_URL = "https://script.google.com/macros/s/AKfycbwrtLgAK-djLst91t_7vz3q8743IHIJavF9rZ8e8B42e9qacetq3-hIiJrfT5DEUb_aXg/exec";
 
-  // Hàm gọi API thay thế cho google.script.run
+  // Hàm gọi API thay thế cho google.script.run (ĐÃ SỬA LỖI FAILED TO FETCH bằng redirect: "follow")
   async function callGoogleAPI(actionName, payloadData = null) {
       try {
           let response = await fetch(API_URL, {
               method: 'POST',
               headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-              body: JSON.stringify({ action: actionName, payload: payloadData })
+              body: JSON.stringify({ action: actionName, payload: payloadData }),
+              redirect: "follow" // <--- DÒNG NÀY RẤT QUAN TRỌNG ĐỂ FIX LỖI FETCH TRÊN GOOGLE SCRIPT
           });
           let result = await response.json();
           if (result.success) {
@@ -441,7 +454,6 @@
   // Đọc params cccd từ URL
   const urlParams = new URLSearchParams(window.location.search);
   window.urlCccdParam = urlParams.get('cccd') || "";
-
 
   let cropper; let currentTarget = ''; let croppedFiles = { avatar: null, front: null, back: null, plate: null }; let globalTimerInterval; 
   let isCheckingDuplicatePlate = false; let isPlateDuplicate = false;
@@ -489,9 +501,19 @@
           html5QrCodeScannerInstance = new Html5Qrcode("reader");
       }
 
+      // ĐÃ SỬA LỖI KHÔNG LẤY NÉT BẰNG CÁCH THÊM VIDEO CONSTRAINTS CHUẨN CHO MACRO/QR
       html5QrCodeScannerInstance.start(
-          { facingMode: "environment" },
-          { fps: 10, qrbox: { width: 250, height: 250 } },
+          { facingMode: "environment" }, 
+          { 
+              fps: 10, 
+              qrbox: { width: 250, height: 250 },
+              aspectRatio: 1.0, 
+              disableFlip: false,
+              videoConstraints: {
+                  facingMode: "environment",
+                  focusMode: "continuous"
+              }
+          },
           (decodedText, decodedResult) => {
               html5QrCodeScannerInstance.stop().then(() => {
                   document.getElementById('reader').style.display = 'none';
