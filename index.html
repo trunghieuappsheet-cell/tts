@@ -4,7 +4,6 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   
-  <!-- Các thẻ Meta SEO & Social Media bạn cung cấp -->
   <title>Đăng ký thông tin thực tập</title>
   <link rel="icon" type="image/png" href="favicon.png?v=3"/>
   <meta property="og:title" content="Đăng ký thông tin thực tập">
@@ -17,7 +16,6 @@
   <meta name="twitter:description" content="Hệ thống đăng ký thông tin thực tập trực tuyến">
   <meta name="twitter:image" content="https://tts.hama.io.vn/logo.png">
 
-  <!-- Thư viện giao diện -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
@@ -70,6 +68,19 @@
     .review-img-box { text-align: center; margin-top: 15px; padding-top: 15px; border-top: 2px solid #eee; }
     .review-img-wrap { display: inline-block; margin: 8px; text-align: center; vertical-align: top; }
     .review-img-wrap img { border: 1px solid #ddd; border-radius: 8px; object-fit: cover; box-shadow: 0 2px 5px rgba(0,0,0,0.05); background-color: #fafafa; }
+
+    /* THÊM CSS HIỆU ỨNG CHẠM LẤY NÉT */
+    #reader { position: relative; width: 100%; margin-top: 15px; border-radius: 8px; overflow: hidden; border: 2px dashed #2D6F4B; }
+    .focus-box {
+      position: absolute; width: 50px; height: 50px; border: 2px solid #28a745;
+      border-radius: 8px; pointer-events: none; transform: translate(-50%, -50%);
+      animation: focus-pulse 0.4s ease-out; z-index: 1000;
+    }
+    @keyframes focus-pulse {
+      0% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+      50% { opacity: 1; border-color: #fff; }
+      100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+    }
   </style>
 </head>
 <body>
@@ -118,7 +129,7 @@
         </button>
       </div>
       
-      <div id="reader" style="display: none; width: 100%; margin-top: 15px; border-radius: 8px; overflow: hidden; border: 2px dashed #2D6F4B;"></div>
+      <div id="reader" style="display: none;"></div>
       <button type="button" id="btn-cancel-scan" class="btn btn-danger btn-sm w-100 py-2 fw-bold mt-2" style="display: none;" onclick="cancelQRScan()">
         <i class="bi bi-x-circle"></i> HỦY QUÉT
       </button>
@@ -346,78 +357,21 @@
     </div>
   </div>
 </div>
-<!-- BẮT ĐẦU: CHÂN TRANG LIÊN HỆ ADMIN -->
-  <div class="mt-4 mb-2 text-center" style="border-top: 1px solid #e2e8f0; padding-top: 25px;">
-    <h6 class="text-muted small fw-bold mb-3" style="letter-spacing: 0.5px;">HỖ TRỢ KỸ THUẬT & QUẢN TRỊ HỆ THỐNG</h6>
-    <div class="d-flex justify-content-center gap-3 flex-wrap">
-      <a href="https://zalo.me/0346576747" target="_blank" class="text-decoration-none shadow-sm rounded-pill px-4 py-2 bg-white border d-flex align-items-center" style="color: var(--primary-color); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 15px rgba(45,111,75,0.15)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.05)'">
-        <i class="bi bi-telephone-fill me-2 fs-5"></i>
-        <span class="fw-bold" style="font-size: 0.95rem;">0346 57 67 47 <small class="text-muted fw-semibold">(Zalo)</small></span>
-      </a>
-      <a href="mailto:hieu.ntt@bimgroup.com" class="text-decoration-none shadow-sm rounded-pill px-4 py-2 bg-white border d-flex align-items-center" style="color: var(--primary-color); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 15px rgba(45,111,75,0.15)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.05)'">
-        <i class="bi bi-envelope-at-fill me-2 fs-5"></i>
-        <span class="fw-bold" style="font-size: 0.95rem;">hieu.ntt@bimgroup.com</span>
-      </a>
-    </div>
-  </div>
-  <!-- KẾT THÚC: CHÂN TRANG LIÊN HỆ ADMIN -->
-<div class="modal fade" id="authModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow"><div class="modal-header bg-dark text-white"><h5 class="modal-title"><i class="bi bi-shield-lock-fill"></i> Xác thực Quản trị</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body text-center p-4"><input type="password" id="adminPassword" class="form-control text-center fw-bold letter-spacing-2 mb-3" placeholder="Nhập mật khẩu..."><div id="authError" class="text-danger small fw-bold mb-2" style="display:none;">Sai mật khẩu!</div><button class="btn btn-dark w-100" onclick="verifyAdmin()">Đăng nhập</button></div></div></div>
-</div>
 
-<div class="modal fade" id="settingsModal" tabindex="-1" data-bs-backdrop="static">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content border-0 shadow">
-      <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title"><i class="bi bi-gear-fill"></i> Quản trị hệ thống</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body p-0">
-        <ul class="nav nav-tabs px-3 pt-3" id="adminTabs" role="tablist">
-          <li class="nav-item" role="presentation"><button class="nav-link active fw-bold text-success" id="tab-lock" data-bs-toggle="tab" data-bs-target="#pane-lock" type="button" role="tab"><i class="bi bi-shield-lock-fill"></i> Khóa Form</button></li>
-          <li class="nav-item" role="presentation"><button class="nav-link fw-bold text-primary" id="tab-class" data-bs-toggle="tab" data-bs-target="#pane-class" type="button" role="tab"><i class="bi bi-card-list"></i> Mã Lớp</button></li>
-        </ul>
-        <div class="tab-content p-4 bg-white" id="adminTabsContent">
-          <div class="tab-pane fade show active" id="pane-lock" role="tabpanel">
-             <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
-                <div><h6 class="mb-1 fw-bold text-dark"><i class="bi bi-lock-fill text-danger"></i> Khóa form thủ công</h6></div>
-                <div class="form-check form-switch"><input class="form-check-input fs-4" type="checkbox" id="toggleManualLock"></div>
-             </div>
-             <div class="mb-4">
-                <h6 class="mb-1 fw-bold text-dark"><i class="bi bi-clock-history text-primary"></i> Khóa tự động theo thời gian</h6>
-                <input type="datetime-local" id="inputExpireTime" class="form-control">
-             </div>
-             <div class="text-end"><button type="button" class="btn btn-primary px-4 fw-bold" id="btnSaveSettings" onclick="saveSettings()">Lưu cài đặt khóa form</button></div>
-          </div>
-          
-          <div class="tab-pane fade" id="pane-class" role="tabpanel">
-             <div class="d-flex justify-content-between mb-3">
-                <h6 class="fw-bold text-dark align-self-center mb-0">Danh sách quản lý mã lớp</h6>
-                <button class="btn btn-sm btn-success fw-bold shadow-sm" onclick="addNewInlineClass()"><i class="bi bi-plus-circle"></i> Thêm dòng mới</button>
-             </div>
-             <div class="table-responsive border rounded" style="max-height: 400px; overflow-y:auto;">
-                <table class="table table-sm table-hover align-middle mb-0">
-                    <thead class="table-light text-secondary" style="position: sticky; top: 0; z-index: 1;">
-                        <tr>
-                            <th class="ps-2">Mã lớp</th>
-                            <th>Tên lớp</th>
-                            <th class="text-center">Chỉ tiêu</th>
-                            <th class="text-center">Hiển thị</th>
-                            <th class="text-end pe-2">Hành động</th>
-                        </tr>
-                    </thead>
-                    <tbody id="adminClassTbody"></tbody>
-                </table>
-             </div>
-          </div>
-        </div>
-      </div>
-    </div>
+<div class="mt-4 mb-2 text-center" style="border-top: 1px solid #e2e8f0; padding-top: 25px;">
+  <h6 class="text-muted small fw-bold mb-3" style="letter-spacing: 0.5px;">HỖ TRỢ KỸ THUẬT & QUẢN TRỊ HỆ THỐNG</h6>
+  <div class="d-flex justify-content-center gap-3 flex-wrap">
+    <a href="https://zalo.me/0346576747" target="_blank" class="text-decoration-none shadow-sm rounded-pill px-4 py-2 bg-white border d-flex align-items-center" style="color: var(--primary-color); transition: all 0.3s;">
+      <i class="bi bi-telephone-fill me-2 fs-5"></i>
+      <span class="fw-bold" style="font-size: 0.95rem;">0346 57 67 47 <small class="text-muted fw-semibold">(Zalo)</small></span>
+    </a>
   </div>
 </div>
 
+<!-- Các Modals giữ nguyên -->
+<div class="modal fade" id="authModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow"><div class="modal-header bg-dark text-white"><h5 class="modal-title"><i class="bi bi-shield-lock-fill"></i> Xác thực Quản trị</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body text-center p-4"><input type="password" id="adminPassword" class="form-control text-center fw-bold letter-spacing-2 mb-3" placeholder="Nhập mật khẩu..."><div id="authError" class="text-danger small fw-bold mb-2" style="display:none;">Sai mật khẩu!</div><button class="btn btn-dark w-100" onclick="verifyAdmin()">Đăng nhập</button></div></div></div></div>
+<div class="modal fade" id="settingsModal" tabindex="-1" data-bs-backdrop="static"><div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content border-0 shadow"><div class="modal-header bg-primary text-white"><h5 class="modal-title"><i class="bi bi-gear-fill"></i> Quản trị hệ thống</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-0"><ul class="nav nav-tabs px-3 pt-3" id="adminTabs" role="tablist"><li class="nav-item" role="presentation"><button class="nav-link active fw-bold text-success" id="tab-lock" data-bs-toggle="tab" data-bs-target="#pane-lock" type="button" role="tab"><i class="bi bi-shield-lock-fill"></i> Khóa Form</button></li><li class="nav-item" role="presentation"><button class="nav-link fw-bold text-primary" id="tab-class" data-bs-toggle="tab" data-bs-target="#pane-class" type="button" role="tab"><i class="bi bi-card-list"></i> Mã Lớp</button></li></ul><div class="tab-content p-4 bg-white" id="adminTabsContent"><div class="tab-pane fade show active" id="pane-lock" role="tabpanel"><div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom"><div><h6 class="mb-1 fw-bold text-dark"><i class="bi bi-lock-fill text-danger"></i> Khóa form thủ công</h6></div><div class="form-check form-switch"><input class="form-check-input fs-4" type="checkbox" id="toggleManualLock"></div></div><div class="mb-4"><h6 class="mb-1 fw-bold text-dark"><i class="bi bi-clock-history text-primary"></i> Khóa tự động theo thời gian</h6><input type="datetime-local" id="inputExpireTime" class="form-control"></div><div class="text-end"><button type="button" class="btn btn-primary px-4 fw-bold" id="btnSaveSettings" onclick="saveSettings()">Lưu cài đặt khóa form</button></div></div><div class="tab-pane fade" id="pane-class" role="tabpanel"><div class="d-flex justify-content-between mb-3"><h6 class="fw-bold text-dark align-self-center mb-0">Danh sách quản lý mã lớp</h6><button class="btn btn-sm btn-success fw-bold shadow-sm" onclick="addNewInlineClass()"><i class="bi bi-plus-circle"></i> Thêm dòng mới</button></div><div class="table-responsive border rounded" style="max-height: 400px; overflow-y:auto;"><table class="table table-sm table-hover align-middle mb-0"><thead class="table-light text-secondary" style="position: sticky; top: 0; z-index: 1;"><tr><th class="ps-2">Mã lớp</th><th>Tên lớp</th><th class="text-center">Chỉ tiêu</th><th class="text-center">Hiển thị</th><th class="text-end pe-2">Hành động</th></tr></thead><tbody id="adminClassTbody"></tbody></table></div></div></div></div></div></div></div>
 <div class="modal fade" id="cropModal" data-bs-backdrop="static" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content"><div class="modal-header bg-success text-white"><h5 class="modal-title">Cắt chỉnh hình ảnh</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-0"><div class="img-container"><img id="imageToCrop"></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button><button type="button" class="btn btn-success" id="cropConfirmBtn">Xác nhận cắt</button></div></div></div></div>
-
 <div class="modal fade" id="listModal" tabindex="-1"><div class="modal-dialog modal-xl"><div class="modal-content border-0 shadow-lg"><div class="modal-header bg-white border-bottom-0 pb-0"><h4 class="modal-title fw-bold text-success"><i class="bi bi-card-checklist me-2"></i>DANH SÁCH ĐÃ GỬI</h4><div><button type="button" class="btn btn-success btn-sm me-2 shadow-sm" onclick="exportExcel()"><i class="bi bi-file-earmark-excel-fill me-1"></i>Xuất Excel</button><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div></div><div class="modal-body p-4 bg-white"><div id="summaryTableContainer" class="mb-4" style="display:none;"></div><div id="listLoader" class="text-center p-5"><div class="spinner-border text-success" style="width: 3rem; height: 3rem;"></div><p class="mt-3 text-muted">Đang tải dữ liệu...</p></div><div class="table-responsive rounded shadow-sm border border-light"><table class="table table-hover align-middle mb-0 text-nowrap" id="submittedTable" style="display: none;"><thead class="table-light text-secondary"><tr><th class="text-center" style="width:60px;">STT</th><th>Họ và tên</th><th>Số CCCD</th><th>Ngày sinh</th><th class="text-center">Giới tính</th><th>Loại xe</th></tr></thead><tbody id="submittedTableBody"></tbody></table></div></div></div></div></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -426,18 +380,18 @@
 
 <script>
   // =========================================================
-  // API URL CỦA GOOGLE APPS SCRIPT
+  // BẮT BUỘC: Bạn phải vào Apps Script bấm Deploy > New Version (Phiên bản mới)
+  // và copy link đuôi /exec dán vào biến API_URL bên dưới.
   // =========================================================
   const API_URL = "https://script.google.com/macros/s/AKfycbwrtLgAK-djLst91t_7vz3q8743IHIJavF9rZ8e8B42e9qacetq3-hIiJrfT5DEUb_aXg/exec";
 
-  // Hàm gọi API thay thế cho google.script.run (ĐÃ SỬA LỖI FAILED TO FETCH bằng redirect: "follow")
+  // Hàm gọi API (Xóa redirect: "follow" để tránh lỗi CORS chặn ngang trên mobile)
   async function callGoogleAPI(actionName, payloadData = null) {
       try {
           let response = await fetch(API_URL, {
               method: 'POST',
               headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-              body: JSON.stringify({ action: actionName, payload: payloadData }),
-              redirect: "follow" // <--- DÒNG NÀY RẤT QUAN TRỌNG ĐỂ FIX LỖI FETCH TRÊN GOOGLE SCRIPT
+              body: JSON.stringify({ action: actionName, payload: payloadData })
           });
           let result = await response.json();
           if (result.success) {
@@ -468,7 +422,7 @@
     
     callGoogleAPI('getLockSettings').then(settings => {
         applyLockState(settings.manualLock, settings.expireTime);
-    }).catch(err => console.error("Lỗi lấy cấu hình khóa:", err));
+    }).catch(err => console.log("Lấy cấu hình khóa form thất bại."));
     
     if (window.urlCccdParam && window.urlCccdParam.trim() !== "") {
       document.getElementById('main-form-content').style.display = 'none';
@@ -487,6 +441,36 @@
     }
   };
 
+  // ================= CHẠM VÀO MÀN HÌNH ĐỂ LẤY NÉT =================
+  const readerElement = document.getElementById('reader');
+  readerElement.addEventListener('click', async (e) => {
+      // 1. Tạo ô vuông nhấp nháy tạo hiệu ứng chạm (Visual effect)
+      const rect = readerElement.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      let focusBox = document.createElement('div');
+      focusBox.className = 'focus-box';
+      focusBox.style.left = x + 'px';
+      focusBox.style.top = y + 'px';
+      readerElement.appendChild(focusBox);
+      setTimeout(() => focusBox.remove(), 400); // Xóa sau 0.4s
+
+      // 2. Ép Camera gọi API lấy nét lại
+      if (html5QrCodeScannerInstance) {
+          try {
+              const video = document.querySelector('#reader video');
+              if (video && video.srcObject) {
+                  const track = video.srcObject.getVideoTracks()[0];
+                  // Ép reset focus mode (cách workaround hiệu quả trên di động)
+                  await track.applyConstraints({ advanced: [{ focusMode: "continuous" }] });
+              }
+          } catch(err) {
+              console.log("Thiết bị không hỗ trợ API chỉnh lấy nét thủ công:", err);
+          }
+      }
+  });
+
   function promptQRScan() {
       if(!document.getElementById('typeCCCD').checked && !document.getElementById('typeCC').checked) {
           alert('Vui lòng chọn Loại thẻ định danh trước khi quét Mã CCCD!');
@@ -495,25 +479,25 @@
       
       document.getElementById('reader').style.display = 'block';
       document.getElementById('btn-cancel-scan').style.display = 'block';
-      document.getElementById('qrStatus').innerHTML = '<span class="text-primary fw-bold"><i class="bi bi-camera"></i> Đang mở camera...</span>';
+      document.getElementById('qrStatus').innerHTML = '<span class="text-primary fw-bold"><i class="bi bi-camera"></i> Đang mở camera... (Chạm vào vùng video để lấy nét)</span>';
 
       if (!html5QrCodeScannerInstance) {
           html5QrCodeScannerInstance = new Html5Qrcode("reader");
       }
 
-      // ĐÃ SỬA LỖI KHÔNG LẤY NÉT BẰNG CÁCH THÊM VIDEO CONSTRAINTS CHUẨN CHO MACRO/QR
+      // Cấu hình video chuyên sâu cho QR (Macro)
+      const config = {
+          fps: 10, 
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1.0, 
+          videoConstraints: {
+              facingMode: "environment",
+              focusMode: "continuous" // Khởi động mặc định cố gắng lấy nét liên tục
+          }
+      };
+
       html5QrCodeScannerInstance.start(
-          { facingMode: "environment" }, 
-          { 
-              fps: 10, 
-              qrbox: { width: 250, height: 250 },
-              aspectRatio: 1.0, 
-              disableFlip: false,
-              videoConstraints: {
-                  facingMode: "environment",
-                  focusMode: "continuous"
-              }
-          },
+          { facingMode: "environment" }, config,
           (decodedText, decodedResult) => {
               html5QrCodeScannerInstance.stop().then(() => {
                   document.getElementById('reader').style.display = 'none';
