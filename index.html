@@ -70,12 +70,13 @@
     .review-img-wrap img { border: 1px solid #ddd; border-radius: 8px; object-fit: cover; box-shadow: 0 2px 5px rgba(0,0,0,0.05); background-color: #fafafa; }
 
     /* CSS GIAO DIỆN LẤY NÉT CHẠM MÀN HÌNH */
-    #reader { position: relative; width: 100%; margin-top: 15px; border-radius: 8px; overflow: hidden; border: 2px dashed #2D6F4B; display: none; }
+    #reader { position: relative; width: 100%; margin-top: 15px; border-radius: 8px; overflow: hidden; border: 2px dashed #2D6F4B; display: none; background: #000; }
+    #reader video { object-fit: cover; }
     .focus-box {
-      position: absolute; width: 60px; height: 60px; border: 3px solid #00ff00;
+      position: absolute; width: 60px; height: 60px; border: 2px solid #00ff00;
       border-radius: 8px; pointer-events: none; transform: translate(-50%, -50%);
-      animation: focus-pulse 0.4s ease-out; z-index: 1000;
-      box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+      animation: focus-pulse 0.5s ease-out; z-index: 1000;
+      box-shadow: 0 0 8px rgba(0, 255, 0, 0.5);
     }
     @keyframes focus-pulse {
       0% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
@@ -381,47 +382,38 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 
 <script>
-  // =========================================================
-  // BẮT BUỘC: Bạn phải vào Apps Script bấm Deploy > Manage Deployments > Bút chì (Edit) > New Version (Phiên bản mới)
-  // và copy link đuôi /exec mới nhất dán vào biến API_URL bên dưới.
-  // =========================================================
+  // URL TỪ GOOGLE SCRIPT MỚI NHẤT
   const API_URL = "https://script.google.com/macros/s/AKfycbwrtLgAK-djLst91t_7vz3q8743IHIJavF9rZ8e8B42e9qacetq3-hIiJrfT5DEUb_aXg/exec";
 
-  // Hàm gọi API
   async function callGoogleAPI(actionName, payloadData = null) {
       try {
           let response = await fetch(API_URL, {
               method: 'POST',
               headers: { 'Content-Type': 'text/plain;charset=utf-8' },
               body: JSON.stringify({ action: actionName, payload: payloadData }),
-              redirect: "follow" // <--- FIX LỖI FAILED TO FETCH KHI GỌI TỪ GITHUB
+              redirect: "follow"
           });
           let result = await response.json();
-          if (result.success) {
-              return result.data;
-          } else {
-              throw new Error(result.error || "Unknown server error");
-          }
+          if (result.success) return result.data;
+          else throw new Error(result.error || "Unknown server error");
       } catch (err) {
           console.error("API Error:", err);
           throw err;
       }
   }
 
-  // Đọc params cccd từ URL
   const urlParams = new URLSearchParams(window.location.search);
   window.urlCccdParam = urlParams.get('cccd') || "";
 
-  let cropper; let currentTarget = ''; let croppedFiles = { avatar: null, front: null, back: null, plate: null }; let globalTimerInterval; 
+  let cropper; let currentTarget = ''; let croppedFiles = { avatar: null, front: null, back: null, plate: null }; 
+  let globalTimerInterval; 
   let isCheckingDuplicatePlate = false; let isPlateDuplicate = false;
   let isSubmitting = false; 
   let html5QrCodeScannerInstance = null;
-  let scanHuntInterval = null; // Biến giữ vòng lặp auto-hunt camera
 
   window.onload = function() {
     document.getElementById('typeCCCD').checked = false;
     document.getElementById('typeCC').checked = false;
-    
     refreshFormClassOptions(); 
     
     callGoogleAPI('getLockSettings').then(settings => {
@@ -431,24 +423,24 @@
     if (window.urlCccdParam && window.urlCccdParam.trim() !== "") {
       document.getElementById('main-form-content').style.display = 'none';
       document.getElementById('urlInitLoader').style.display = 'block';
-      
       callGoogleAPI('checkCCCD', {cccd: window.urlCccdParam}).then(existingData => {
         document.getElementById('urlInitLoader').style.display = 'none';
         document.getElementById('main-form-content').style.display = 'block';
         if (existingData) {
           fillFormWithExistingData(existingData);
           document.getElementById('qrStatus').innerHTML = '<div class="alert alert-warning py-1 mt-2 mb-0"><i class="bi bi-envelope-open-fill"></i> Tải dữ liệu thành công từ liên kết Email. Sẵn sàng Cập nhật.</div>';
-        } else {
-          alert("Không tìm thấy dữ liệu cũ khớp với số CCCD từ email!");
-        }
+        } else alert("Không tìm thấy dữ liệu cũ khớp với số CCCD từ email!");
       }).catch(err => alert("Lỗi khi kết nối đến máy chủ."));
     }
   };
 
-  // ================= TÍNH NĂNG CHẠM ĐỂ LẤY NÉT (TAP TO FOCUS) =================
+  // -------------------------------------------------------------
+  // THUẬT TOÁN QUÉT QR & LẤY NÉT CHẠM GIỐNG GOOGLE LENS
+  // -------------------------------------------------------------
   const readerElement = document.getElementById('reader');
+  
+  // Sự kiện CHẠM ĐỂ LẤY NÉT (UX giống app Native)
   readerElement.addEventListener('click', async (e) => {
-      // 1. Hiển thị ô vuông nhấp nháy xanh tại vị trí chạm (UX)
       const rect = readerElement.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
@@ -458,36 +450,20 @@
       focusBox.style.left = x + 'px';
       focusBox.style.top = y + 'px';
       readerElement.appendChild(focusBox);
-      setTimeout(() => focusBox.remove(), 400);
+      setTimeout(() => focusBox.remove(), 500);
 
-      // 2. Ép phần cứng Camera lấy nét và xoay vòng Zoom
-      try {
-          const video = document.querySelector('#reader video');
-          if (video && video.srcObject) {
-              const track = video.srcObject.getVideoTracks()[0];
-              const caps = track.getCapabilities();
-              
-              if (caps.zoom) {
-                  let zMin = caps.zoom.min || 1;
-                  let zMax = caps.zoom.max || 4;
-                  // Mỗi lần chạm, tăng zoom lên 1.0. Nếu vượt quá, quay về nhỏ nhất.
-                  window.currentZoom = (window.currentZoom || 1.5) + 1.0;
-                  if(window.currentZoom > Math.min(zMax, 5)) window.currentZoom = Math.max(zMin, 1.5);
-                  
-                  await track.applyConstraints({ 
-                      advanced: [{ focusMode: "continuous", zoom: window.currentZoom }] 
-                  });
-              } else {
-                  // Chỉ lấy nét nếu máy không hỗ trợ quang học zoom
+      if (html5QrCodeScannerInstance) {
+          try {
+              const video = document.querySelector('#reader video');
+              if (video && video.srcObject) {
+                  const track = video.srcObject.getVideoTracks()[0];
+                  // Ép lại constraints để module phần cứng tính toán lại nét
                   await track.applyConstraints({ advanced: [{ focusMode: "continuous" }] });
               }
-          }
-      } catch(err) {
-          console.log("Thiết bị không hỗ trợ API chỉnh thủ công:", err);
+          } catch(err) { console.log("Thiết bị không hỗ trợ ép nét thủ công."); }
       }
   });
 
-  // ================= KHỞI ĐỘNG QUÉT MÃ QR & AUTO-HUNT =================
   function promptQRScan() {
       if(!document.getElementById('typeCCCD').checked && !document.getElementById('typeCC').checked) {
           alert('Vui lòng chọn Loại thẻ định danh trước khi quét Mã CCCD!');
@@ -496,70 +472,34 @@
       
       document.getElementById('reader').style.display = 'block';
       document.getElementById('btn-cancel-scan').style.display = 'block';
-      document.getElementById('qrStatus').innerHTML = '<span class="text-primary fw-bold"><i class="bi bi-camera"></i> Đang mở camera... <br><small class="text-muted">(Chạm vào màn hình để tự căn nét)</small></span>';
+      document.getElementById('qrStatus').innerHTML = '<span class="text-primary fw-bold"><i class="bi bi-camera"></i> Đang mở camera... (Chạm để lấy nét nếu mờ)</span>';
 
-      if (!html5QrCodeScannerInstance) {
-          html5QrCodeScannerInstance = new Html5Qrcode("reader");
-      }
+      if (!html5QrCodeScannerInstance) html5QrCodeScannerInstance = new Html5Qrcode("reader");
 
+      // Bật lõi Machine Learning Native (nếu trình duyệt/HĐH hỗ trợ) + Độ phân giải Full HD
       const config = {
-          fps: 15, // Tăng tốc độ quét (frame per sec)
+          fps: 15, 
           qrbox: { width: 250, height: 250 },
           aspectRatio: 1.0, 
-          videoConstraints: { facingMode: "environment" }
+          useBarCodeDetectorIfSupported: true, // NATIVE API như Google Lens
+          videoConstraints: {
+              facingMode: "environment",
+              width: { ideal: 1920 }, // Độ phân giải cao không cần zoom thụt thò
+              height: { ideal: 1080 }
+          }
       };
 
       html5QrCodeScannerInstance.start(
           { facingMode: "environment" }, config,
-          (decodedText, decodedResult) => {
-              // Hủy vòng lặp săn mã nếu quét thành công
-              if(scanHuntInterval) clearInterval(scanHuntInterval);
-              
+          (decodedText) => {
               html5QrCodeScannerInstance.stop().then(() => {
                   document.getElementById('reader').style.display = 'none';
                   document.getElementById('btn-cancel-scan').style.display = 'none';
                   processQRData(decodedText);
-              }).catch(err => { console.error("Failed to stop scanner", err); });
+              }).catch(err => console.error("Failed to stop scanner", err));
           },
           (errorMessage) => { }
-      ).then(() => {
-          // BẬT AUTO ZOOM QUANG HỌC VÀ LẤY NÉT NGAY KHI CAMERA MỞ LÊN (Khoảng 0.5s sau khi luồng live bắt đầu)
-          setTimeout(async () => {
-              try {
-                  const video = document.querySelector('#reader video');
-                  if (!video || !video.srcObject) return;
-                  const track = video.srcObject.getVideoTracks()[0];
-                  const caps = track.getCapabilities();
-                  
-                  // Mức zoom lý tưởng để QR to tràn khung
-                  window.currentZoom = 2.5; 
-                  
-                  if (caps.zoom) {
-                      window.currentZoom = Math.min(caps.zoom.max, Math.max(caps.zoom.min, 2.5));
-                  }
-                  
-                  // Áp dụng ngay Zoom + AutoFocus liên tục
-                  await track.applyConstraints({ 
-                      advanced: [{ focusMode: "continuous", zoom: window.currentZoom }] 
-                  });
-
-                  // VÒNG LẶP AUTO-HUNT: Mỗi 2 giây đảo zoom quang học siêu vi (0.1x) để ép ống kính điện thoại phải tự canh lại nét (chống kẹt Focus)
-                  let toggle = false;
-                  scanHuntInterval = setInterval(async () => {
-                      try {
-                          if(caps.zoom) {
-                              toggle = !toggle;
-                              let huntZoom = toggle ? window.currentZoom + 0.1 : window.currentZoom - 0.1;
-                              huntZoom = Math.min(caps.zoom.max, Math.max(caps.zoom.min, huntZoom));
-                              await track.applyConstraints({ advanced: [{ focusMode: "continuous", zoom: huntZoom }] });
-                          }
-                      } catch(e){}
-                  }, 2000);
-
-              } catch(e) { console.log("Không thể ép auto-zoom/focus:", e); }
-          }, 500);
-
-      }).catch((err) => {
+      ).catch((err) => {
           document.getElementById('qrStatus').innerHTML = '<div class="alert alert-danger py-1 mt-2">Lỗi: Không thể mở camera. Vui lòng cấp quyền hoặc thử trình duyệt khác.</div>';
           document.getElementById('reader').style.display = 'none';
           document.getElementById('btn-cancel-scan').style.display = 'none';
@@ -567,7 +507,6 @@
   }
 
   function cancelQRScan() {
-      if(scanHuntInterval) clearInterval(scanHuntInterval);
       if (html5QrCodeScannerInstance) {
           html5QrCodeScannerInstance.stop().then(() => {
               document.getElementById('reader').style.display = 'none';
@@ -615,7 +554,6 @@
           }
 
           statusDiv.innerHTML = '<span class="text-primary fw-bold"><i class="bi bi-arrow-repeat"></i> Đang kiểm tra lịch sử...</span>';
-          
           callGoogleAPI('checkCCCD', {cccd: parts[0]}).then(existingData => {
              if (existingData) {
                 fillFormWithExistingData(existingData);
@@ -722,11 +660,8 @@
       btn.innerHTML = '<span class="spinner-border spinner-border-sm" style="width: 1rem; height: 1rem;"></span>';
       btn.disabled = true;
       
-      callGoogleAPI('saveAdminClassCode', {
-          action: actionType, 
-          data: payloadData, 
-          password: document.getElementById('adminPassword').value
-      }).then(res => {
+      callGoogleAPI('saveAdminClassCode', { action: actionType, data: payloadData, password: document.getElementById('adminPassword').value })
+      .then(res => {
           alert(res.message);
           loadAdminClasses(); 
           refreshFormClassOptions();
@@ -740,13 +675,9 @@
       if(!confirm(`Bạn có chắc muốn xóa vĩnh viễn mã lớp: ${code}?`)) return;
       document.getElementById('adminClassTbody').innerHTML = '<tr><td colspan="5" class="text-center py-3"><div class="spinner-border text-primary spinner-border-sm"></div></td></tr>';
       
-      callGoogleAPI('saveAdminClassCode', {
-          action: 'DELETE', 
-          data: {row: row}, 
-          password: document.getElementById('adminPassword').value
-      }).then(res => {
-          loadAdminClasses(); refreshFormClassOptions();
-      }).catch(err => alert("Lỗi: " + err.message));
+      callGoogleAPI('saveAdminClassCode', { action: 'DELETE', data: {row: row}, password: document.getElementById('adminPassword').value })
+      .then(res => { loadAdminClasses(); refreshFormClassOptions(); })
+      .catch(err => alert("Lỗi: " + err.message));
   }
 
   const authModal = new bootstrap.Modal(document.getElementById('authModal')); const settingsModal = new bootstrap.Modal(document.getElementById('settingsModal'));
@@ -769,7 +700,6 @@
 
   function saveSettings() { 
       const btn = document.getElementById('btnSaveSettings'); btn.innerHTML = 'Đang lưu...'; btn.disabled = true; 
-      
       callGoogleAPI('saveLockSettings', {
           settings: { manualLock: document.getElementById('toggleManualLock').checked, expireTime: document.getElementById('inputExpireTime').value },
           password: document.getElementById('adminPassword').value
@@ -789,7 +719,6 @@
     const expireStr = document.getElementById('expireDate').value;
     const warningDiv = document.getElementById('expireWarning');
     if (!expireStr) { warningDiv.style.display = 'none'; return; }
-    
     const expDate = new Date(expireStr);
     const today = new Date();
     const diffTime = expDate - today;
@@ -838,11 +767,7 @@
     const readerBase64 = new FileReader();
     readerBase64.onload = () => { 
         croppedFiles.plate = readerBase64.result.split(',')[1]; 
-        
-        callGoogleAPI('analyzeLicensePlateWithGemini', {
-            base64: croppedFiles.plate,
-            mimeType: file.type
-        }).then(res => {
+        callGoogleAPI('analyzeLicensePlateWithGemini', { base64: croppedFiles.plate, mimeType: file.type }).then(res => {
             if(res.error) {
                 status.innerHTML = "❌ Lỗi: " + res.error; 
                 status.className = "small fw-bold text-danger mt-1";
@@ -881,21 +806,15 @@
     document.getElementById('bankBranch').value = ''; document.getElementById('bankBranch').disabled = true;
     document.getElementById('emergencyName').value = ''; document.getElementById('emergencyRelation').value = ''; document.getElementById('emergencyPhone').value = '';
     document.getElementById('expireDate').value = ''; document.getElementById('expireWarning').style.display = 'none';
-    
-    document.getElementById('dateIssue').value = '';
-    document.getElementById('placeIssue').value = '';
-    
+    document.getElementById('dateIssue').value = ''; document.getElementById('placeIssue').value = '';
     isPlateDuplicate = false; 
     
     document.querySelectorAll('.info-value').forEach(div => { div.innerText = "---"; div.classList.remove('filled'); });
     croppedFiles = { avatar: null, front: null, back: null, plate: null };
     document.getElementById('avatar').value = ''; document.getElementById('frontImage').value = ''; document.getElementById('backImage').value = '';
     document.querySelectorAll('.img-preview').forEach(img => { img.removeAttribute('src'); img.style.display = 'none'; });
-    
     document.getElementById('headerAvatar').style.display = 'none'; document.getElementById('headerAvatar').src = '';
-    document.getElementById('avatarStatus').innerHTML = '';
-    document.getElementById('frontStatus').innerHTML = '';
-    document.getElementById('backStatus').innerHTML = '';
+    document.getElementById('avatarStatus').innerHTML = ''; document.getElementById('frontStatus').innerHTML = ''; document.getElementById('backStatus').innerHTML = '';
   }
 
   function editCurrentInfo() {
@@ -909,7 +828,6 @@
     document.getElementById('editRowId').value = ""; document.getElementById('cccd').value = "";
     document.getElementById('fullname').value = ""; document.getElementById('dob').value = "";
     document.getElementById('address').value = "";
-    
     document.getElementById('typeCCCD').checked = false; document.getElementById('typeCC').checked = false;
     window.urlCccdParam = ""; 
     toggleImageRequired(false);
@@ -919,9 +837,8 @@
     window.scrollTo(0, 0);
   }
 
-function fillFormWithExistingData(existingData) {
+  function fillFormWithExistingData(existingData) {
     document.getElementById('editRowId').value = existingData.row || '';
-    
     if(existingData.cccd) { document.getElementById('cccd').value = existingData.cccd; document.getElementById('txt_cccd').innerText = existingData.cccd; document.getElementById('txt_cccd').classList.add('filled'); }
     if(existingData.fullname) { document.getElementById('fullname').value = existingData.fullname; document.getElementById('txt_fullname').innerText = existingData.fullname; document.getElementById('txt_fullname').classList.add('filled'); }
     if(existingData.dob) { document.getElementById('dob').value = existingData.dob; document.getElementById('txt_dob').innerText = existingData.dob; document.getElementById('txt_dob').classList.add('filled'); }
@@ -932,15 +849,8 @@ function fillFormWithExistingData(existingData) {
     if(existingData.classCode) {
         let selectClass = document.getElementById('classCode');
         let exists = false;
-        for (let i = 0; i < selectClass.options.length; i++) {
-            if (selectClass.options[i].value === existingData.classCode) { exists = true; break; }
-        }
-        if (!exists) {
-            let newOpt = document.createElement('option');
-            newOpt.value = existingData.classCode;
-            newOpt.text = existingData.classCode;
-            selectClass.add(newOpt);
-        }
+        for (let i = 0; i < selectClass.options.length; i++) { if (selectClass.options[i].value === existingData.classCode) { exists = true; break; } }
+        if (!exists) { let newOpt = document.createElement('option'); newOpt.value = existingData.classCode; newOpt.text = existingData.classCode; selectClass.add(newOpt); }
         selectClass.value = existingData.classCode;
     }
     
@@ -951,29 +861,19 @@ function fillFormWithExistingData(existingData) {
     }
 
     if(existingData.phone) document.getElementById('phone').value = existingData.phone;
-    
-    if(existingData.licensePlate) {
-        document.getElementById('licensePlate').value = existingData.licensePlate;
-        document.getElementById('btnClearPlate').style.display = 'block'; 
-    }
+    if(existingData.licensePlate) { document.getElementById('licensePlate').value = existingData.licensePlate; document.getElementById('btnClearPlate').style.display = 'block'; }
     
     toggleVehicleType(); 
     if(existingData.vehicleType) document.getElementById('vehicleType').value = existingData.vehicleType;
-    
     if(existingData.bankAccount) document.getElementById('bankAccount').value = existingData.bankAccount;
     toggleBankInfo();
     if(existingData.bankName) document.getElementById('bankName').value = existingData.bankName; 
     if(existingData.bankBranch) document.getElementById('bankBranch').value = existingData.bankBranch;
-    
     if(existingData.emergencyName) document.getElementById('emergencyName').value = existingData.emergencyName; 
     if(existingData.emergencyRelation) document.getElementById('emergencyRelation').value = existingData.emergencyRelation;
     if(existingData.emergencyPhone) document.getElementById('emergencyPhone').value = existingData.emergencyPhone;
-
     if(existingData.email) document.getElementById('email').value = existingData.email;
-    if(existingData.expireDate) {
-        document.getElementById('expireDate').value = formatDateForInput(existingData.expireDate);
-        checkExpiration(); 
-    }
+    if(existingData.expireDate) { document.getElementById('expireDate').value = formatDateForInput(existingData.expireDate); checkExpiration(); }
 
     if(existingData.avatarUrl) { 
       let avtUrl = getDriveImgUrl(existingData.avatarUrl);
@@ -991,12 +891,9 @@ function fillFormWithExistingData(existingData) {
     if (isCheckingDuplicatePlate) { alert("Hệ thống đang đối chiếu trùng lặp biển số, xin đợi vài giây!"); return; }
     
     var isEdit = document.getElementById('editRowId').value !== "";
-    if (isPlateDuplicate && !isEdit) {
-       alert("Hệ thống từ chối nhận mẫu đăng ký! Biển số xe này đã trùng khớp với người đăng ký trước."); return;
-    }
+    if (isPlateDuplicate && !isEdit) { alert("Hệ thống từ chối nhận mẫu đăng ký! Biển số xe này đã trùng khớp với người đăng ký trước."); return; }
 
     const f = document.getElementById('traineeForm');
-    
     if (!document.getElementById('placeIssue').value) { alert("Vui lòng chọn Loại thẻ định danh (CCCD Mặt trước hoặc Thẻ Căn cước)!"); return; }
     if (!document.getElementById('cccd').value) { alert("Vui lòng quét QR CCCD để lấy thông tin cá nhân gốc!"); return; }
     if (!f.checkValidity()) { f.reportValidity(); return; }
@@ -1024,8 +921,7 @@ function fillFormWithExistingData(existingData) {
       editRowId: document.getElementById('editRowId').value, cccd: document.getElementById('cccd').value, fullname: document.getElementById('fullname').value,
       dob: document.getElementById('dob').value, gender: document.getElementById('txt_gender').innerText, address: document.getElementById('address').value,
       dateIssue: document.getElementById('dateIssue').value, placeIssue: document.getElementById('placeIssue').value, classCode: document.getElementById('classCode').value, 
-      email: document.getElementById('email').value.trim(),
-      phone: document.getElementById('phone').value.trim(), licensePlate: document.getElementById('licensePlate').value.trim(),
+      email: document.getElementById('email').value.trim(), phone: document.getElementById('phone').value.trim(), licensePlate: document.getElementById('licensePlate').value.trim(),
       vehicleType: document.getElementById('vehicleType').value, bankAccount: document.getElementById('bankAccount').value.trim(), bankName: document.getElementById('bankName').value, bankBranch: document.getElementById('bankBranch').value.trim(),
       emergencyName: document.getElementById('emergencyName').value.trim(), emergencyRelation: document.getElementById('emergencyRelation').value,
       emergencyPhone: document.getElementById('emergencyPhone').value.trim(), expireDate: getFormattedDateFromInput('expireDate'),
@@ -1033,16 +929,8 @@ function fillFormWithExistingData(existingData) {
     };
 
     callGoogleAPI('processForm', {formData: formData}).then(resObj => {
-      clearInterval(timer);
-      isSubmitting = false;
-      btnSubmit.disabled = false;
-      btnSubmit.innerHTML = '<i class="bi bi-cloud-arrow-up-fill"></i> GỬI THÔNG TIN ĐĂNG KÝ';
-
-      if (resObj.message.startsWith("LỖI:")) {
-        progressBar.classList.add('bg-danger'); progressText.classList.replace('text-success', 'text-danger');
-        progressText.innerText = 'Lỗi!'; alert(resObj.message); document.getElementById('loader').style.display = 'none'; return;
-      }
-
+      clearInterval(timer); isSubmitting = false; btnSubmit.disabled = false; btnSubmit.innerHTML = '<i class="bi bi-cloud-arrow-up-fill"></i> GỬI THÔNG TIN ĐĂNG KÝ';
+      if (resObj.message.startsWith("LỖI:")) { progressBar.classList.add('bg-danger'); progressText.classList.replace('text-success', 'text-danger'); progressText.innerText = 'Lỗi!'; alert(resObj.message); document.getElementById('loader').style.display = 'none'; return; }
       if (resObj.rowId) { document.getElementById('editRowId').value = resObj.rowId; }
 
       progressBar.style.width = '100%'; progressText.innerText = 'Xong!';
@@ -1065,8 +953,7 @@ function fillFormWithExistingData(existingData) {
         document.getElementById('main-form-content').style.display = 'none'; document.getElementById('review-content').style.display = 'block'; window.scrollTo(0, 0);
       }, 500);
     }).catch(err => {
-      clearInterval(timer); 
-      isSubmitting = false; btnSubmit.disabled = false; btnSubmit.innerHTML = '<i class="bi bi-cloud-arrow-up-fill"></i> GỬI THÔNG TIN ĐĂNG KÝ';
+      clearInterval(timer); isSubmitting = false; btnSubmit.disabled = false; btnSubmit.innerHTML = '<i class="bi bi-cloud-arrow-up-fill"></i> GỬI THÔNG TIN ĐĂNG KÝ';
       progressBar.classList.add('bg-danger'); progressText.innerText = 'Lỗi Server: ' + err.message; alert("Lỗi: " + err.message); document.getElementById('loader').style.display = 'none';
     });
   }
@@ -1074,25 +961,18 @@ function fillFormWithExistingData(existingData) {
   function applyLockState(isManualLock, expireTimeStr) { 
     clearInterval(globalTimerInterval); 
     const c = document.getElementById("countdown-container"), f = document.getElementById("traineeForm"), b = document.getElementById("btn-scan-qr"), bdg = document.getElementById("deadlineBadge"); 
-    if(isManualLock) { 
-      c.style.display="block"; c.innerHTML="<i class='bi bi-lock-fill fs-4'></i><br>HỆ THỐNG ĐÃ KHÓA THỦ CÔNG"; c.className="countdown-box countdown-expired"; f.style.display="none"; b.disabled=true; bdg.style.display="none"; return; 
-    } 
-    if(!expireTimeStr) { 
-      c.style.display="none"; f.style.display="block"; b.disabled=false; bdg.style.display="none"; return; 
-    } 
+    if(isManualLock) { c.style.display="block"; c.innerHTML="<i class='bi bi-lock-fill fs-4'></i><br>HỆ THỐNG ĐÃ KHÓA THỦ CÔNG"; c.className="countdown-box countdown-expired"; f.style.display="none"; b.disabled=true; bdg.style.display="none"; return; } 
+    if(!expireTimeStr) { c.style.display="none"; f.style.display="block"; b.disabled=false; bdg.style.display="none"; return; } 
     const d = new Date(expireTimeStr);
     const dStr = ('0'+d.getHours()).slice(-2) + ':' + ('0'+d.getMinutes()).slice(-2) + ' ngày ' + ('0'+d.getDate()).slice(-2) + '/' + ('0'+(d.getMonth()+1)).slice(-2) + '/' + d.getFullYear();
-    bdg.style.display = 'inline-block';
-    const dTime = d.getTime(); 
+    bdg.style.display = 'inline-block'; const dTime = d.getTime(); 
     globalTimerInterval = setInterval(function() { 
       const n = new Date().getTime(); const dist = dTime - n; 
-      if(dist<0) { 
-        clearInterval(globalTimerInterval); c.style.display="block"; c.innerHTML="<i class='bi bi-clock-history fs-4'></i><br>HẾT HẠN HỒ SƠ"; c.className="countdown-box countdown-expired"; f.style.display="none"; b.disabled=true; bdg.style.display="none";
-      } else { 
+      if(dist<0) { clearInterval(globalTimerInterval); c.style.display="block"; c.innerHTML="<i class='bi bi-clock-history fs-4'></i><br>HẾT HẠN HỒ SƠ"; c.className="countdown-box countdown-expired"; f.style.display="none"; b.disabled=true; bdg.style.display="none"; } 
+      else { 
         f.style.display="block"; b.disabled=false; 
         const days = Math.floor(dist/(1000*60*60*24)), hours = Math.floor((dist%(1000*60*60*24))/(1000*60*60)), minutes = Math.floor((dist%(1000*60*60))/(1000*60)), seconds = Math.floor((dist%(1000*60))/1000); 
-        bdg.style.whiteSpace = 'normal';
-        bdg.innerHTML = '<i class="bi bi-clock-history"></i> Hạn chót: <strong>' + dStr + '</strong><span class="d-block d-sm-inline ms-sm-1 text-danger fw-bold mt-1 mt-sm-0">(Còn ' + days + 'n ' + hours + 'g ' + minutes + 'p ' + seconds + 's)</span>';
+        bdg.style.whiteSpace = 'normal'; bdg.innerHTML = '<i class="bi bi-clock-history"></i> Hạn chót: <strong>' + dStr + '</strong><span class="d-block d-sm-inline ms-sm-1 text-danger fw-bold mt-1 mt-sm-0">(Còn ' + days + 'n ' + hours + 'g ' + minutes + 'p ' + seconds + 's)</span>';
       } 
     }, 1000); 
   }
@@ -1102,9 +982,7 @@ function fillFormWithExistingData(existingData) {
   function toggleImageRequired(isEdit) { const stars = document.querySelectorAll('.img-req-star'), notes = document.querySelectorAll('.img-edit-note'); if(isEdit) { ['avatar','frontImage','backImage'].forEach(id => document.getElementById(id).removeAttribute('required')); stars.forEach(el=>el.style.display='none'); notes.forEach(el=>el.style.display='inline'); } else { ['avatar','frontImage','backImage'].forEach(id => document.getElementById(id).setAttribute('required','true')); stars.forEach(el=>el.style.display='inline'); notes.forEach(el=>el.style.display='none'); } }
   
   function initCropper(input, ratio, target) { 
-    if(input.files&&input.files[0]) { 
-      currentTarget=target; const r=new FileReader(); r.onload=function(e) { document.getElementById('imageToCrop').src=e.target.result; new bootstrap.Modal(document.getElementById('cropModal')).show(); document.getElementById('cropModal').addEventListener('shown.bs.modal', function(){ if(cropper) cropper.destroy(); cropper = new Cropper(document.getElementById('imageToCrop'), {aspectRatio: ratio, viewMode: 1, autoCropArea: 1}); }, {once:true}); }; r.readAsDataURL(input.files[0]); 
-    } 
+    if(input.files&&input.files[0]) { currentTarget=target; const r=new FileReader(); r.onload=function(e) { document.getElementById('imageToCrop').src=e.target.result; new bootstrap.Modal(document.getElementById('cropModal')).show(); document.getElementById('cropModal').addEventListener('shown.bs.modal', function(){ if(cropper) cropper.destroy(); cropper = new Cropper(document.getElementById('imageToCrop'), {aspectRatio: ratio, viewMode: 1, autoCropArea: 1}); }, {once:true}); }; r.readAsDataURL(input.files[0]); } 
   }
   
   document.getElementById('cropConfirmBtn').addEventListener('click', function() { 
@@ -1115,64 +993,33 @@ function fillFormWithExistingData(existingData) {
     p.src=d; p.style.display='block'; 
     
     if(currentTarget === 'avatar') { 
-        document.getElementById('headerAvatar').src = d; 
-        document.getElementById('headerAvatar').style.display = 'block'; 
-
-        const statusDiv = document.getElementById('avatarStatus');
-        statusDiv.innerHTML = '<span class="text-primary"><i class="bi bi-hourglass-split"></i> AI đang kiểm duyệt nền ảnh thẻ...</span>';
+        document.getElementById('headerAvatar').src = d; document.getElementById('headerAvatar').style.display = 'block'; 
+        const statusDiv = document.getElementById('avatarStatus'); statusDiv.innerHTML = '<span class="text-primary"><i class="bi bi-hourglass-split"></i> AI đang kiểm duyệt nền ảnh thẻ...</span>';
         document.getElementById('btnSubmitForm').disabled = true;
-
         callGoogleAPI('analyzeAvatarWithGemini', { base64: croppedFiles.avatar }).then(res => {
             document.getElementById('btnSubmitForm').disabled = false;
-            
-            if(res.error) {
-                statusDiv.innerHTML = '<span class="text-danger fw-bold"><i class="bi bi-x-circle-fill"></i> Lỗi kiểm tra ảnh: ' + res.error + '</span>';
-            } else if(res.isValid === false || res.isValid === "false") {
+            if(res.error) { statusDiv.innerHTML = '<span class="text-danger fw-bold"><i class="bi bi-x-circle-fill"></i> Lỗi kiểm tra ảnh: ' + res.error + '</span>'; } 
+            else if(res.isValid === false || res.isValid === "false") {
                 statusDiv.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle-fill"></i> <b>Ảnh bị từ chối:</b> ' + res.reason + '</span>';
-                
-                croppedFiles.avatar = null;
-                p.style.display = 'none';
-                document.getElementById('headerAvatar').style.display = 'none';
-                document.getElementById('avatar').value = ''; 
-                
+                croppedFiles.avatar = null; p.style.display = 'none'; document.getElementById('headerAvatar').style.display = 'none'; document.getElementById('avatar').value = ''; 
                 alert("⚠️ ẢNH THẺ KHÔNG ĐẠT YÊU CẦU!\n\nLý do từ AI: " + res.reason + "\n\n👉 Vui lòng sử dụng app trên điện thoại (như PhotoRoom, Canva...) để tự tách nền trắng hoặc xanh dương trơn trước khi upload.");
-            } else {
-                statusDiv.innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill"></i> Ảnh hợp lệ chuẩn phông thẻ.</span>';
-            }
-        }).catch(err => {
-            document.getElementById('btnSubmitForm').disabled = false;
-            statusDiv.innerHTML = '<span class="text-danger fw-bold"><i class="bi bi-x-circle-fill"></i> Lỗi kết nối AI.</span>';
-        });
+            } else { statusDiv.innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill"></i> Ảnh hợp lệ chuẩn phông thẻ.</span>'; }
+        }).catch(err => { document.getElementById('btnSubmitForm').disabled = false; statusDiv.innerHTML = '<span class="text-danger fw-bold"><i class="bi bi-x-circle-fill"></i> Lỗi kết nối AI.</span>'; });
     } 
     else if (currentTarget === 'front' || currentTarget === 'back') {
-        const statusDiv = document.getElementById(currentTarget + 'Status');
-        const sideNameStr = currentTarget === 'front' ? 'Mặt trước' : 'Mặt sau';
-        
+        const statusDiv = document.getElementById(currentTarget + 'Status'); const sideNameStr = currentTarget === 'front' ? 'Mặt trước' : 'Mặt sau';
         statusDiv.innerHTML = '<span class="text-primary"><i class="bi bi-hourglass-split"></i> AI đang kiểm tra ' + sideNameStr.toLowerCase() + '...</span>';
         document.getElementById('btnSubmitForm').disabled = true;
-
         callGoogleAPI('analyzeCCCDWithGemini', { base64: croppedFiles[currentTarget], side: sideNameStr }).then(res => {
             document.getElementById('btnSubmitForm').disabled = false;
-            
-            if(res.error) {
-                statusDiv.innerHTML = '<span class="text-danger fw-bold"><i class="bi bi-x-circle-fill"></i> Lỗi kiểm tra ảnh: ' + res.error + '</span>';
-            } else if(res.isValid === false || res.isValid === "false") {
+            if(res.error) { statusDiv.innerHTML = '<span class="text-danger fw-bold"><i class="bi bi-x-circle-fill"></i> Lỗi kiểm tra ảnh: ' + res.error + '</span>'; } 
+            else if(res.isValid === false || res.isValid === "false") {
                 statusDiv.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle-fill"></i> <b>Ảnh bị từ chối:</b> ' + res.reason + '</span>';
-                
-                croppedFiles[currentTarget] = null;
-                p.style.display = 'none';
-                document.getElementById(currentTarget + 'Image').value = ''; 
-                
+                croppedFiles[currentTarget] = null; p.style.display = 'none'; document.getElementById(currentTarget + 'Image').value = ''; 
                 alert("⚠️ ẢNH CCCD KHÔNG ĐẠT YÊU CẦU!\n\nLý do từ AI: " + res.reason + "\n\n👉 Yêu cầu: Ảnh chụp nằm ngang (không xoay dọc) và Cắt sát lề viền thẻ, không để dư thừa mặt bàn.");
-            } else {
-                statusDiv.innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill"></i> Ảnh hợp lệ.</span>';
-            }
-        }).catch(err => {
-            document.getElementById('btnSubmitForm').disabled = false;
-            statusDiv.innerHTML = '<span class="text-danger fw-bold"><i class="bi bi-x-circle-fill"></i> Lỗi kết nối AI.</span>';
-        });
+            } else { statusDiv.innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill"></i> Ảnh hợp lệ.</span>'; }
+        }).catch(err => { document.getElementById('btnSubmitForm').disabled = false; statusDiv.innerHTML = '<span class="text-danger fw-bold"><i class="bi bi-x-circle-fill"></i> Lỗi kết nối AI.</span>'; });
     }
-
     bootstrap.Modal.getInstance(document.getElementById('cropModal')).hide(); 
   });
   
@@ -1180,35 +1027,23 @@ function fillFormWithExistingData(existingData) {
   
   function loadSubmittedList() { 
       document.getElementById('listLoader').style.display='block'; document.getElementById('submittedTable').style.display='none'; document.getElementById('summaryTableContainer').style.display='none'; 
-      
       callGoogleAPI('getSubmittedData').then(res => { 
           document.getElementById('listLoader').style.display='none'; document.getElementById('submittedTable').style.display='table'; document.getElementById('summaryTableContainer').style.display='block'; 
           const stats = res.stats; const dataList = res.list; let otherCount = 0; 
-          
-          dataList.forEach(i => { 
-              if (!i.classCode || !stats[i.classCode]) { 
-                  otherCount++; 
-                  i.classCode = "Khác (Bị ẩn / Không có)"; 
-              } 
-          }); 
-          
+          dataList.forEach(i => { if (!i.classCode || !stats[i.classCode]) { otherCount++; i.classCode = "Khác (Bị ẩn / Không có)"; } }); 
           let sumHtml = `<div class="table-responsive rounded shadow-sm border border-light"><table class="table table-bordered text-center mb-0 text-nowrap" style="background:#fff; vertical-align: middle;"><thead class="table-success"><tr><th class="py-3">Mã lớp</th><th class="py-3">Chỉ tiêu</th><th class="py-3">Đã nộp<br><span style="font-size:0.75rem; font-weight:normal;">(Tổng / Nam / Nữ)</span></th><th class="py-3">Còn lại</th><th class="py-3">Số xe</th></tr></thead><tbody>`; 
           let totalTarget = 0, totalMale = 0, totalFemale = 0, totalSub = 0, totalVehicles = 0; 
           for (let c in stats) { 
-              let s = stats[c]; 
-              totalTarget += s.target; totalMale += s.male; totalFemale += s.female; totalSub += s.count; totalVehicles += s.vehicles; 
-              let rem = s.target - s.count; 
+              let s = stats[c]; totalTarget += s.target; totalMale += s.male; totalFemale += s.female; totalSub += s.count; totalVehicles += s.vehicles; let rem = s.target - s.count; 
               sumHtml += `<tr><td class="align-middle fw-bold text-success">${c}<br><span class="text-muted small fw-normal">${s.name}</span></td><td class="align-middle">${s.target}</td><td class="align-middle"><div class="d-flex flex-column align-items-center"><span class="text-success fw-bold fs-5 mb-1">${s.count}</span><div class="d-flex gap-1 justify-content-center"><span class="badge rounded-pill" style="background-color: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; font-size: 0.7rem;"><i class="bi bi-gender-male"></i> ${s.male}</span><span class="badge rounded-pill" style="background-color: #fce7f3; color: #db2777; border: 1px solid #fbcfe8; font-size: 0.7rem;"><i class="bi bi-gender-female"></i> ${s.female}</span></div></div></td><td class="align-middle text-danger fw-bold">${rem}</td><td class="align-middle text-secondary fw-bold">${s.vehicles}</td></tr>`; 
           } 
           let totalRem = totalTarget - totalSub; 
           sumHtml += `<tr style="background-color: #f8f9fa;"><td class="align-middle text-success"><strong>TỔNG CỘNG</strong></td><td class="align-middle fs-5"><strong>${totalTarget}</strong></td><td class="align-middle"><div class="d-flex flex-column align-items-center"><span class="text-success fw-bold fs-5 mb-1">${totalSub}</span><div class="d-flex gap-1 justify-content-center"><span class="badge rounded-pill" style="background-color: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; font-size: 0.75rem;"><i class="bi bi-gender-male fw-bold"></i> ${totalMale}</span><span class="badge rounded-pill" style="background-color: #fce7f3; color: #db2777; border: 1px solid #fbcfe8; font-size: 0.75rem;"><i class="bi bi-gender-female fw-bold"></i> ${totalFemale}</span></div></div></td><td class="align-middle text-danger fw-bold fs-5">${totalRem}</td><td class="align-middle text-secondary fw-bold fs-5"></i> ${totalVehicles}</td></tr></tbody></table></div>`; 
           if (otherCount > 0) sumHtml += `<div class="text-end text-muted small mt-1">*Có ${otherCount} hồ sơ thuộc nhóm: Khác (Bị ẩn / Không có).</div>`; 
           document.getElementById('summaryTableContainer').innerHTML = sumHtml; 
-          
           var tbody = document.getElementById('submittedTableBody'); 
           if (dataList.length) { 
-              let groupedData = {}; 
-              dataList.forEach(i => { let code = i.classCode ? i.classCode : "Khác (Bị ẩn / Không có)"; if (!groupedData[code]) groupedData[code] = []; groupedData[code].push(i); }); 
+              let groupedData = {}; dataList.forEach(i => { let code = i.classCode ? i.classCode : "Khác (Bị ẩn / Không có)"; if (!groupedData[code]) groupedData[code] = []; groupedData[code].push(i); }); 
               let tbodyHtml = ''; let sortedCodes = Object.keys(groupedData).sort(); let groupIndex = 1; 
               sortedCodes.forEach(code => { 
                   groupedData[code].sort((a, b) => a.stt - b.stt); 
@@ -1222,10 +1057,8 @@ function fillFormWithExistingData(existingData) {
                       let vehicleUI = i.vehicleType ? `<span class="text-secondary fw-semibold">${i.vehicleType}</span>` : '<span class="text-muted small">---</span>'; 
                       tbodyHtml += `<tr style="${dupStyle}" data-duplicate="${i.isDuplicate}"><td class="text-center text-muted fw-bold">${itemIndex}</td><td class="fw-bold align-middle">${i.fullname}</td><td class="font-monospace text-secondary align-middle">${i.cccd}</td><td class="align-middle">${i.dob}</td><td class="text-center align-middle">${genderUI}</td><td class="align-middle">${vehicleUI}</td></tr>`; 
                       itemIndex++; 
-                  }); 
-                  groupIndex++; 
-              }); 
-              tbody.innerHTML = tbodyHtml; 
+                  }); groupIndex++; 
+              }); tbody.innerHTML = tbodyHtml; 
           } else { tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-3">Chưa có dữ liệu</td></tr>'; } 
       }).catch(err => alert("Lỗi tải danh sách: " + err.message)); 
   }
