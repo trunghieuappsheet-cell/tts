@@ -73,8 +73,14 @@
     @keyframes focus-pulse { 0% { transform: translate(-50%, -50%) scale(1.4); opacity: 0; } 50% { opacity: 1; border-color: #ffffff; } 100% { transform: translate(-50%, -50%) scale(1); opacity: 0; } }
     
     #zoom-badge { position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.65); color: #00ff66; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 0.9rem; pointer-events: none; z-index: 10; border: 1px solid rgba(0,255,102,0.4); display: none; }
-    #btn-switch-cam { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); color: #fff; padding: 6px 14px; border-radius: 8px; font-weight: bold; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.4); z-index: 20; display: none; cursor: pointer; }
+    
+    /* Nút đổi cam thiết kế nổi bật */
+    #btn-switch-cam { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); color: #fff; padding: 6px 14px; border-radius: 8px; font-weight: bold; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.4); z-index: 20; display: none; cursor: pointer; backdrop-filter: blur(4px); box-shadow: 0 2px 6px rgba(0,0,0,0.5); }
     #btn-switch-cam:active { background: rgba(0,0,0,0.9); transform: scale(0.95); }
+    
+    .action-btn-group { display: flex; gap: 8px; margin-top: 15px; }
+    .action-btn-group .btn { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px 5px; line-height: 1.2; }
+    .action-btn-group .btn i { font-size: 1.25rem; margin-bottom: 4px; }
   </style>
 </head>
 <body>
@@ -96,10 +102,10 @@
       
       <div id="deadlineBadge" class="badge rounded-pill bg-warning text-dark border border-warning shadow-sm mb-3 px-3 py-2" style="display:none; font-size: 0.85rem; font-weight: 600;"></div>
       
-      <p class="text-muted small mt-1">Vui lòng chọn loại thẻ và quét CCCD để lấy thông tin</p>
+      <p class="text-muted small mt-1">Vui lòng chọn loại thẻ định danh cần sử dụng</p>
       
-      <div class="mb-3 text-start bg-white p-3 rounded border shadow-sm">
-        <label class="fw-bold text-success mb-3 d-block"><i class="bi bi-card-heading me-1"></i> Loại thẻ định danh sử dụng quét:</label>
+      <div class="mb-2 text-start bg-white p-3 rounded border shadow-sm">
+        <label class="fw-bold text-success mb-3 d-block"><i class="bi bi-card-heading me-1"></i> Loại thẻ quét mã QR:</label>
         <div class="row align-items-start">
           <div class="col-6 text-center border-end">
             <input class="form-check-input" type="radio" name="cardType" id="typeCCCD" value="CCCD" onchange="autoFillPlaceIssue()">
@@ -114,29 +120,24 @@
         </div>
       </div>
 
-      <!-- THANH CÔNG CỤ 3 NÚT -->
-      <div class="row g-2 mt-3">
-        <div class="col-4">
-          <button type="button" class="btn btn-outline-secondary w-100 h-100 py-2 fw-bold" onclick="loadSubmittedList()" data-bs-toggle="modal" data-bs-target="#listModal" style="font-size:0.85rem;">
-            <i class="bi bi-list-ul fs-5 d-block mb-1"></i>Danh sách
-          </button>
-        </div>
-        <div class="col-4">
-          <button type="button" id="btn-scan-qr" class="btn btn-success w-100 h-100 py-2 fw-bold" onclick="promptQRScan()" style="font-size:0.85rem;">
-            <i class="bi bi-camera-video fs-5 d-block mb-1"></i>Camera
-          </button>
-        </div>
-        <div class="col-4">
-          <button type="button" class="btn btn-primary w-100 h-100 py-2 fw-bold" onclick="document.getElementById('qrFileInput').click()" style="font-size:0.85rem;">
-            <i class="bi bi-image fs-5 d-block mb-1"></i>Tải Ảnh
-          </button>
-          <input type="file" id="qrFileInput" accept="image/*" style="display: none;" onchange="handleQRImageUpload(event)">
-        </div>
+      <!-- THANH CÔNG CỤ 3 NÚT CHÍNH -->
+      <div class="action-btn-group">
+        <button type="button" class="btn btn-outline-secondary fw-bold" style="width: 25%; font-size: 0.8rem;" onclick="loadSubmittedList()" data-bs-toggle="modal" data-bs-target="#listModal">
+          <i class="bi bi-list-ul"></i> Danh sách
+        </button>
+        <button type="button" id="btn-scan-qr" class="btn btn-success flex-grow-1 fw-bold" style="font-size: 0.85rem;" onclick="promptQRScan()">
+          <i class="bi bi-camera-video"></i> QUÉT LIVE
+        </button>
+        <button type="button" class="btn btn-primary flex-grow-1 fw-bold" style="font-size: 0.85rem;" onclick="document.getElementById('qrFileInput').click()">
+          <i class="bi bi-image"></i> TẢI ẢNH
+        </button>
+        <!-- Nút input ẩn dùng để chọn ảnh QR từ điện thoại -->
+        <input type="file" id="qrFileInput" accept="image/*" style="display: none;" onchange="handleQRImageUpload(event)">
       </div>
       
       <!-- KHU VỰC CAMERA QUÉT QR -->
       <div id="reader">
-         <button type="button" id="btn-switch-cam" onclick="switchCamera(event)"><i class="bi bi-arrow-repeat"></i> Đổi Cam</button>
+         <button type="button" id="btn-switch-cam" onclick="switchCamera(event)"><i class="bi bi-camera-reels"></i> Đổi Cam</button>
          <div id="zoom-badge"><i class="bi bi-search"></i> <span id="zoom-text">1.0x</span></div>
       </div>
       <button type="button" id="btn-cancel-scan" class="btn btn-danger w-100 py-2 fw-bold mt-2 shadow-sm" style="display: none;" onclick="cancelQRScan()">
@@ -417,10 +418,10 @@
   let availableCameras = [];
   let currentCameraIndex = 0;
   window.currentZoom = 1.0; 
+  let isUsingFrontCamera = false;
 
   window.onload = function() {
-    document.getElementById('typeCCCD').checked = false;
-    document.getElementById('typeCC').checked = false;
+    document.getElementById('typeCCCD').checked = false; document.getElementById('typeCC').checked = false;
     refreshFormClassOptions(); 
     callGoogleAPI('getLockSettings').then(settings => { applyLockState(settings.manualLock, settings.expireTime); }).catch(err => {});
     
@@ -432,16 +433,16 @@
         document.getElementById('main-form-content').style.display = 'block';
         if (existingData) { fillFormWithExistingData(existingData); document.getElementById('qrStatus').innerHTML = '<div class="alert alert-warning py-1 mt-2 mb-0"><i class="bi bi-envelope-open-fill"></i> Tải dữ liệu thành công từ liên kết Email. Sẵn sàng Cập nhật.</div>'; } 
         else alert("Không tìm thấy dữ liệu cũ khớp với số CCCD từ email!");
-      }).catch(err => alert("Lỗi khi kết nối đến máy chủ."));
+      }).catch(err => alert("Lỗi kết nối máy chủ."));
     }
   };
 
   // -------------------------------------------------------------
-  // TẢI ẢNH QR LÊN TRỰC TIẾP
+  // TÍNH NĂNG CHỌN ẢNH QR ĐỂ QUÉT
   // -------------------------------------------------------------
   function handleQRImageUpload(e) {
       if(!document.getElementById('typeCCCD').checked && !document.getElementById('typeCC').checked) {
-          alert('Vui lòng chọn Loại thẻ định danh trước khi quét!'); e.target.value = ''; return;
+          alert('Vui lòng chọn Loại thẻ định danh trước khi tải ảnh!'); e.target.value = ''; return;
       }
       if (e.target.files.length === 0) return;
       const file = e.target.files[0];
@@ -450,22 +451,24 @@
       
       const html5QrCode = new Html5Qrcode("reader");
       html5QrCode.scanFile(file, true)
-          .then(decodedText => { processQRData(decodedText); e.target.value = ''; })
+          .then(decodedText => { 
+              statusDiv.innerHTML = '';
+              processQRData(decodedText); 
+              e.target.value = ''; 
+          })
           .catch(err => {
-              statusDiv.innerHTML = '<div class="alert alert-danger py-1 mt-2 mb-0"><i class="bi bi-x-circle-fill"></i> Lỗi: Không tìm thấy mã QR trên ảnh. Vui lòng chụp rõ và gần hơn.</div>';
+              statusDiv.innerHTML = '<div class="alert alert-danger py-1 mt-2 mb-0"><i class="bi bi-x-circle-fill"></i> Lỗi: Không tìm thấy mã QR trên ảnh. Vui lòng thử ảnh khác chụp rõ, thẳng góc hơn.</div>';
               e.target.value = '';
           });
   }
 
   // -------------------------------------------------------------
-  // XỬ LÝ CAMERA: ZOOM CSS & ĐỔI CAM
+  // TÍNH NĂNG QUÉT CAMERA TRỰC TIẾP
   // -------------------------------------------------------------
   function applyCameraZoom() {
       const video = document.querySelector('#reader video');
       if (video) {
           video.style.transform = `scale(${window.currentZoom})`;
-          // Yêu cầu camera tập trung lấy nét (nếu phần cứng hỗ trợ)
-          try { video.srcObject.getVideoTracks()[0].applyConstraints({ advanced: [{ focusMode: "continuous" }] }); } catch(err) {}
       }
       document.getElementById('zoom-text').innerText = window.currentZoom.toFixed(1) + "x";
       document.getElementById('zoom-badge').style.display = 'block';
@@ -473,7 +476,7 @@
 
   const readerElement = document.getElementById('reader');
   readerElement.addEventListener('click', (e) => {
-      // Chặn nếu bấm nhầm nút đổi camera
+      // Bỏ qua nếu người dùng bấm vào nút đổi camera
       if(e.target.id === 'btn-switch-cam' || e.target.closest('#btn-switch-cam')) return;
 
       const rect = readerElement.getBoundingClientRect();
@@ -494,35 +497,58 @@
 
   function switchCamera(event) {
       event.stopPropagation();
-      if (availableCameras.length <= 1) return;
-      currentCameraIndex = (currentCameraIndex + 1) % availableCameras.length;
       document.getElementById('qrStatus').innerHTML = '<span class="text-primary fw-bold"><i class="bi bi-arrow-repeat"></i> Đang đổi ống kính...</span>';
       
-      html5QrCodeScannerInstance.stop().then(() => { startScanner(availableCameras[currentCameraIndex].id); }).catch(err => { startScanner(availableCameras[currentCameraIndex].id); });
+      if (availableCameras.length > 1) {
+          currentCameraIndex = (currentCameraIndex + 1) % availableCameras.length;
+          restartScanner(availableCameras[currentCameraIndex].id);
+      } else {
+          // Fallback: nếu điện thoại không liệt kê được danh sách camera sau, đổi luân phiên Trước / Sau
+          isUsingFrontCamera = !isUsingFrontCamera;
+          restartScanner({ facingMode: isUsingFrontCamera ? "user" : "environment" });
+      }
+  }
+
+  function restartScanner(config) {
+      if (html5QrCodeScannerInstance) {
+          html5QrCodeScannerInstance.stop().then(() => { startScanner(config); }).catch(err => { startScanner(config); });
+      }
   }
 
   function promptQRScan() {
       if(!document.getElementById('typeCCCD').checked && !document.getElementById('typeCC').checked) {
-          alert('Vui lòng chọn Loại thẻ định danh trước khi quét Mã CCCD!'); return;
+          alert('Vui lòng chọn Loại thẻ định danh trước khi quét!'); return;
       }
       
       document.getElementById('reader').style.display = 'block';
       document.getElementById('btn-cancel-scan').style.display = 'block';
-      document.getElementById('qrStatus').innerHTML = '<span class="text-primary fw-bold"><i class="bi bi-camera"></i> Đang mở camera... (Vui lòng Cấp Quyền Truy Cập Camera)</span>';
+      document.getElementById('btn-switch-cam').style.display = 'block'; // LUÔN LUÔN HIỆN NÚT ĐỔI CAM
+      document.getElementById('qrStatus').innerHTML = '<span class="text-primary fw-bold"><i class="bi bi-camera"></i> Đang mở camera... (Chạm để đổi Zoom)</span>';
 
       if (!html5QrCodeScannerInstance) html5QrCodeScannerInstance = new Html5Qrcode("reader");
 
-      // Khởi động luồng camera default để ép hỏi Quyền Truy Cập trước
-      startScanner({ facingMode: "environment" });
+      Html5Qrcode.getCameras().then(cameras => {
+          if (cameras && cameras.length > 0) {
+              availableCameras = cameras;
+              // Ưu tiên camera sau (back/0)
+              let backCamIndex = cameras.findIndex(c => c.label.toLowerCase().includes('back') || c.label.toLowerCase().includes('0'));
+              currentCameraIndex = backCamIndex !== -1 ? backCamIndex : cameras.length - 1;
+              startScanner(cameras[currentCameraIndex].id);
+          } else {
+              startScanner({ facingMode: "environment" });
+          }
+      }).catch(err => {
+          startScanner({ facingMode: "environment" });
+      });
   }
 
   function startScanner(cameraIdOrConfig) {
       const config = {
           fps: 10,
           qrbox: function(vw, vh) { return { width: Math.min(vw, vh) * 0.9, height: Math.min(vw, vh) * 0.9 }; },
-          experimentalFeatures: { useBarCodeDetectorIfSupported: true }, // Tăng độ nhạy với CCCD
+          experimentalFeatures: { useBarCodeDetectorIfSupported: true }, // Quét siêu nhạy Google Lens
           formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ],
-          videoConstraints: { width: { ideal: 1920 }, height: { ideal: 1080 } } // Ép phân giải cao để zoom ko bị vỡ
+          videoConstraints: { width: { ideal: 1920 }, height: { ideal: 1080 } }
       };
 
       html5QrCodeScannerInstance.start(
@@ -530,19 +556,10 @@
           (decodedText) => { html5QrCodeScannerInstance.stop().then(() => { hideScannerUI(); processQRData(decodedText); }).catch(e => console.error(e)); },
           (errorMessage) => { }
       ).then(() => {
-          document.getElementById('qrStatus').innerHTML = '<span class="text-primary fw-bold"><i class="bi bi-camera"></i> Chạm vào màn hình để Zoom & Lấy nét</span>';
-          
-          // Lấy danh sách camera SAU KHI đã xin quyền thành công
-          Html5Qrcode.getCameras().then(cameras => {
-              if (cameras && cameras.length > 1) {
-                  availableCameras = cameras;
-                  document.getElementById('btn-switch-cam').style.display = 'block';
-              }
-          });
-
+          document.getElementById('qrStatus').innerHTML = '<span class="text-primary fw-bold"><i class="bi bi-camera"></i> Chạm vào màn hình để Zoom ảnh to hơn</span>';
           setTimeout(() => { window.currentZoom = 1.0; applyCameraZoom(); }, 400); 
       }).catch((err) => {
-          document.getElementById('qrStatus').innerHTML = '<div class="alert alert-danger py-1 mt-2 mb-0">Lỗi: Không thể mở camera. Vui lòng kiểm tra quyền.</div>';
+          document.getElementById('qrStatus').innerHTML = '<div class="alert alert-danger py-1 mt-2 mb-0">Lỗi: Không thể mở camera. Vui lòng cấp quyền hoặc tải ảnh lên.</div>';
           hideScannerUI();
       });
   }
@@ -560,6 +577,9 @@
       }
   }
 
+  // -------------------------------------------------------------
+  // XỬ LÝ DỮ LIỆU FORM & API
+  // -------------------------------------------------------------
   function processQRData(decodedText) {
       clearOldFormInputs(); autoFillPlaceIssue();
       const statusDiv = document.getElementById('qrStatus');
@@ -600,9 +620,9 @@
           statusDiv.innerHTML = '<span class="text-primary fw-bold"><i class="bi bi-arrow-repeat"></i> Đang kiểm tra lịch sử...</span>';
           callGoogleAPI('checkCCCD', {cccd: parts[0]}).then(existingData => {
              if (existingData) { fillFormWithExistingData(existingData); statusDiv.innerHTML = '<div class="alert alert-warning py-1 mt-2 mb-0"><i class="bi bi-pencil-square"></i> Đã tải lịch sử đăng ký cũ. Sẵn sàng Cập nhật.</div>'; } 
-             else { document.getElementById('editRowId').value = ""; toggleImageRequired(false); statusDiv.innerHTML = '<div class="alert alert-success py-1 mt-2 mb-0"><i class="bi bi-check-circle"></i> Quét mã thành công.</div>'; }
+             else { document.getElementById('editRowId').value = ""; toggleImageRequired(false); statusDiv.innerHTML = '<div class="alert alert-success py-1 mt-2 mb-0"><i class="bi bi-check-circle"></i> Trích xuất mã thành công.</div>'; }
           }).catch(err => { statusDiv.innerHTML = '<div class="alert alert-danger py-1 mt-2 mb-0"><i class="bi bi-exclamation-triangle"></i> Lỗi truy xuất: ' + err.message + '</div>'; });
-      } else { statusDiv.innerHTML = '<div class="alert alert-danger py-1 mt-2 mb-0">Lỗi: Định dạng QR không hợp lệ.</div>'; }
+      } else { statusDiv.innerHTML = '<div class="alert alert-danger py-1 mt-2 mb-0">Lỗi: Định dạng QR không hợp lệ hoặc không phải CCCD.</div>'; }
   }
 
   function formatDateForInput(dateStr) { if(!dateStr) return ''; if(dateStr.includes('/')) { let p = dateStr.split('/'); return p[2] + '-' + ('0'+p[1]).slice(-2) + '-' + ('0'+p[0]).slice(-2); } return dateStr; }
