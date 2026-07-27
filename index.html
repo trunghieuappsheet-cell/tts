@@ -65,33 +65,16 @@
     .review-img-wrap { display: inline-block; margin: 8px; text-align: center; vertical-align: top; }
     .review-img-wrap img { border: 1px solid #ddd; border-radius: 8px; object-fit: cover; box-shadow: 0 2px 5px rgba(0,0,0,0.05); background-color: #fafafa; }
 
-    /* GIAO DIỆN QUÉT MÃ QR TỐI ƯU */
+    /* CSS GIAO DIỆN QUÉT CAMERA */
     #reader { position: relative; width: 100%; height: 350px; margin-top: 15px; border-radius: 12px; overflow: hidden; border: 2px dashed #2D6F4B; display: none; background: #000; touch-action: manipulation; }
-    #reader video { width: 100% !important; height: 100% !important; object-fit: cover !important; }
+    #reader video { width: 100% !important; height: 100% !important; object-fit: cover !important; transition: transform 0.25s ease-out; transform-origin: center center; }
     
-    /* Box nháy màu để chỉ báo đang lấy nét */
-    .focus-box {
-      position: absolute; width: 60px; height: 60px; border: 2px solid #00ff00;
-      border-radius: 8px; pointer-events: none; transform: translate(-50%, -50%);
-      animation: focus-pulse 0.4s ease-out; z-index: 1000; box-shadow: 0 0 8px rgba(0, 255, 0, 0.5);
-    }
-    @keyframes focus-pulse {
-      0% { transform: translate(-50%, -50%) scale(1.4); opacity: 0; }
-      50% { opacity: 1; border-color: #ffffff; }
-      100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
-    }
+    .focus-box { position: absolute; width: 60px; height: 60px; border: 2px solid #00ff00; border-radius: 8px; pointer-events: none; transform: translate(-50%, -50%); animation: focus-pulse 0.4s ease-out; z-index: 1000; box-shadow: 0 0 8px rgba(0, 255, 0, 0.5); }
+    @keyframes focus-pulse { 0% { transform: translate(-50%, -50%) scale(1.4); opacity: 0; } 50% { opacity: 1; border-color: #ffffff; } 100% { transform: translate(-50%, -50%) scale(1); opacity: 0; } }
     
-    #zoom-badge {
-      position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.65);
-      color: #00ff66; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 0.9rem;
-      pointer-events: none; z-index: 10; border: 1px solid rgba(0,255,102,0.4); display: none;
-    }
-    #btn-switch-cam {
-      position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.65);
-      color: #fff; padding: 5px 12px; border-radius: 8px; font-weight: bold; font-size: 0.85rem;
-      border: 1px solid rgba(255,255,255,0.4); z-index: 20; display: none; cursor: pointer;
-    }
-    #btn-switch-cam:hover { background: rgba(0,0,0,0.85); }
+    #zoom-badge { position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.65); color: #00ff66; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 0.9rem; pointer-events: none; z-index: 10; border: 1px solid rgba(0,255,102,0.4); display: none; }
+    #btn-switch-cam { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); color: #fff; padding: 6px 14px; border-radius: 8px; font-weight: bold; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.4); z-index: 20; display: none; cursor: pointer; }
+    #btn-switch-cam:active { background: rgba(0,0,0,0.9); transform: scale(0.95); }
   </style>
 </head>
 <body>
@@ -131,22 +114,33 @@
         </div>
       </div>
 
-      <div class="d-flex gap-2 mt-3">
-        <button type="button" class="btn btn-outline-secondary btn-sm w-100" onclick="loadSubmittedList()" data-bs-toggle="modal" data-bs-target="#listModal">
-          <i class="bi bi-list-ul"></i> Danh sách
-        </button>
-        <button type="button" id="btn-scan-qr" class="btn btn-success btn-sm w-100 py-2 fw-bold" onclick="promptQRScan()">
-          <i class="bi bi-qr-code-scan"></i> QUÉT MÃ CCCD
-        </button>
+      <!-- THANH CÔNG CỤ 3 NÚT -->
+      <div class="row g-2 mt-3">
+        <div class="col-4">
+          <button type="button" class="btn btn-outline-secondary w-100 h-100 py-2 fw-bold" onclick="loadSubmittedList()" data-bs-toggle="modal" data-bs-target="#listModal" style="font-size:0.85rem;">
+            <i class="bi bi-list-ul fs-5 d-block mb-1"></i>Danh sách
+          </button>
+        </div>
+        <div class="col-4">
+          <button type="button" id="btn-scan-qr" class="btn btn-success w-100 h-100 py-2 fw-bold" onclick="promptQRScan()" style="font-size:0.85rem;">
+            <i class="bi bi-camera-video fs-5 d-block mb-1"></i>Camera
+          </button>
+        </div>
+        <div class="col-4">
+          <button type="button" class="btn btn-primary w-100 h-100 py-2 fw-bold" onclick="document.getElementById('qrFileInput').click()" style="font-size:0.85rem;">
+            <i class="bi bi-image fs-5 d-block mb-1"></i>Tải Ảnh
+          </button>
+          <input type="file" id="qrFileInput" accept="image/*" style="display: none;" onchange="handleQRImageUpload(event)">
+        </div>
       </div>
       
       <!-- KHU VỰC CAMERA QUÉT QR -->
       <div id="reader">
-         <button type="button" id="btn-switch-cam" onclick="switchCamera(event)"><i class="bi bi-camera-reels"></i> Đổi Cam</button>
+         <button type="button" id="btn-switch-cam" onclick="switchCamera(event)"><i class="bi bi-arrow-repeat"></i> Đổi Cam</button>
          <div id="zoom-badge"><i class="bi bi-search"></i> <span id="zoom-text">1.0x</span></div>
       </div>
-      <button type="button" id="btn-cancel-scan" class="btn btn-danger btn-sm w-100 py-2 fw-bold mt-2" style="display: none;" onclick="cancelQRScan()">
-        <i class="bi bi-x-circle"></i> HỦY QUÉT
+      <button type="button" id="btn-cancel-scan" class="btn btn-danger w-100 py-2 fw-bold mt-2 shadow-sm" style="display: none;" onclick="cancelQRScan()">
+        <i class="bi bi-x-circle"></i> TẮT CAMERA
       </button>
 
       <div id="qrStatus" class="mt-2 fw-bold small"></div>
@@ -394,7 +388,6 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 
 <script>
-  // ĐẢM BẢO URL NÀY ĐÃ ĐƯỢC DEPLOY "NEW VERSION" TỪ GOOGLE SCRIPT
   const API_URL = "https://script.google.com/macros/s/AKfycbwrtLgAK-djLst91t_7vz3q8743IHIJavF9rZ8e8B42e9qacetq3-hIiJrfT5DEUb_aXg/exec";
 
   async function callGoogleAPI(actionName, payloadData = null) {
@@ -408,10 +401,7 @@
           let result = await response.json();
           if (result.success) return result.data;
           else throw new Error(result.error || "Unknown server error");
-      } catch (err) {
-          console.error("API Error:", err);
-          throw err;
-      }
+      } catch (err) { console.error("API Error:", err); throw err; }
   }
 
   const urlParams = new URLSearchParams(window.location.search);
@@ -422,9 +412,7 @@
   let isCheckingDuplicatePlate = false; let isPlateDuplicate = false;
   let isSubmitting = false; 
   
-  // -------------------------------------------------------------
-  // BIẾN CHO HỆ THỐNG CAMERA
-  // -------------------------------------------------------------
+  // BIẾN CHO CAMERA
   let html5QrCodeScannerInstance = null;
   let availableCameras = [];
   let currentCameraIndex = 0;
@@ -434,10 +422,7 @@
     document.getElementById('typeCCCD').checked = false;
     document.getElementById('typeCC').checked = false;
     refreshFormClassOptions(); 
-    
-    callGoogleAPI('getLockSettings').then(settings => {
-        applyLockState(settings.manualLock, settings.expireTime);
-    }).catch(err => console.log("Lấy cấu hình khóa form thất bại."));
+    callGoogleAPI('getLockSettings').then(settings => { applyLockState(settings.manualLock, settings.expireTime); }).catch(err => {});
     
     if (window.urlCccdParam && window.urlCccdParam.trim() !== "") {
       document.getElementById('main-form-content').style.display = 'none';
@@ -445,46 +430,50 @@
       callGoogleAPI('checkCCCD', {cccd: window.urlCccdParam}).then(existingData => {
         document.getElementById('urlInitLoader').style.display = 'none';
         document.getElementById('main-form-content').style.display = 'block';
-        if (existingData) {
-          fillFormWithExistingData(existingData);
-          document.getElementById('qrStatus').innerHTML = '<div class="alert alert-warning py-1 mt-2 mb-0"><i class="bi bi-envelope-open-fill"></i> Tải dữ liệu thành công từ liên kết Email. Sẵn sàng Cập nhật.</div>';
-        } else alert("Không tìm thấy dữ liệu cũ khớp với số CCCD từ email!");
+        if (existingData) { fillFormWithExistingData(existingData); document.getElementById('qrStatus').innerHTML = '<div class="alert alert-warning py-1 mt-2 mb-0"><i class="bi bi-envelope-open-fill"></i> Tải dữ liệu thành công từ liên kết Email. Sẵn sàng Cập nhật.</div>'; } 
+        else alert("Không tìm thấy dữ liệu cũ khớp với số CCCD từ email!");
       }).catch(err => alert("Lỗi khi kết nối đến máy chủ."));
     }
   };
 
   // -------------------------------------------------------------
-  // XỬ LÝ CAMERA: ĐỔI CAM, ZOOM 0.5x, LẤY NÉT CHẠM
+  // TẢI ẢNH QR LÊN TRỰC TIẾP
   // -------------------------------------------------------------
-  
-  // 1. Áp dụng Zoom (Tăng dần 0.5x)
-  async function applyCameraZoom() {
-      try {
-          const video = document.querySelector('#reader video');
-          if (video && video.srcObject) {
-              const track = video.srcObject.getVideoTracks()[0];
-              const caps = track.getCapabilities();
-              
-              if (caps.zoom) {
-                  // Giới hạn max theo phần cứng, hoặc trần 3.0x
-                  let safeZoom = Math.min(window.currentZoom, caps.zoom.max || 3.0);
-                  await track.applyConstraints({ advanced: [{ focusMode: "continuous", zoom: safeZoom }] });
-              } else {
-                  // Fallback kích hoạt focus nếu máy không hỗ trợ zoom API
-                  await track.applyConstraints({ advanced: [{ focusMode: "continuous" }] });
-              }
-          }
-      } catch(err) { console.log("Không thể ép API phần cứng:", err); }
+  function handleQRImageUpload(e) {
+      if(!document.getElementById('typeCCCD').checked && !document.getElementById('typeCC').checked) {
+          alert('Vui lòng chọn Loại thẻ định danh trước khi quét!'); e.target.value = ''; return;
+      }
+      if (e.target.files.length === 0) return;
+      const file = e.target.files[0];
+      const statusDiv = document.getElementById('qrStatus');
+      statusDiv.innerHTML = '<span class="text-primary fw-bold"><i class="bi bi-hourglass-split"></i> Đang đọc mã QR từ ảnh tải lên...</span>';
       
-      // Hiển thị giao diện mức zoom
+      const html5QrCode = new Html5Qrcode("reader");
+      html5QrCode.scanFile(file, true)
+          .then(decodedText => { processQRData(decodedText); e.target.value = ''; })
+          .catch(err => {
+              statusDiv.innerHTML = '<div class="alert alert-danger py-1 mt-2 mb-0"><i class="bi bi-x-circle-fill"></i> Lỗi: Không tìm thấy mã QR trên ảnh. Vui lòng chụp rõ và gần hơn.</div>';
+              e.target.value = '';
+          });
+  }
+
+  // -------------------------------------------------------------
+  // XỬ LÝ CAMERA: ZOOM CSS & ĐỔI CAM
+  // -------------------------------------------------------------
+  function applyCameraZoom() {
+      const video = document.querySelector('#reader video');
+      if (video) {
+          video.style.transform = `scale(${window.currentZoom})`;
+          // Yêu cầu camera tập trung lấy nét (nếu phần cứng hỗ trợ)
+          try { video.srcObject.getVideoTracks()[0].applyConstraints({ advanced: [{ focusMode: "continuous" }] }); } catch(err) {}
+      }
       document.getElementById('zoom-text').innerText = window.currentZoom.toFixed(1) + "x";
       document.getElementById('zoom-badge').style.display = 'block';
   }
 
-  // 2. Chạm màn hình để đổi Zoom & Lấy nét lại
   const readerElement = document.getElementById('reader');
   readerElement.addEventListener('click', (e) => {
-      // Chặn sự kiện nếu bấm vào nút Đổi Camera
+      // Chặn nếu bấm nhầm nút đổi camera
       if(e.target.id === 'btn-switch-cam' || e.target.closest('#btn-switch-cam')) return;
 
       const rect = readerElement.getBoundingClientRect();
@@ -498,100 +487,62 @@
       readerElement.appendChild(focusBox);
       setTimeout(() => focusBox.remove(), 450);
 
-      // Tăng mức Zoom lên 0.5 mỗi lần chạm (Quay vòng 1.0 -> 3.0)
       window.currentZoom += 0.5;
-      if(window.currentZoom > 3.0) {
-          window.currentZoom = 1.0;
-      }
+      if(window.currentZoom > 3.0) window.currentZoom = 1.0;
       applyCameraZoom();
   });
 
-  // 3. Nút đổi Camera
   function switchCamera(event) {
-      event.stopPropagation(); // Không cho kích hoạt sự kiện zoom
+      event.stopPropagation();
       if (availableCameras.length <= 1) return;
-      
       currentCameraIndex = (currentCameraIndex + 1) % availableCameras.length;
-      document.getElementById('qrStatus').innerHTML = '<span class="text-primary fw-bold"><i class="bi bi-arrow-repeat"></i> Đang đổi ống kính camera...</span>';
+      document.getElementById('qrStatus').innerHTML = '<span class="text-primary fw-bold"><i class="bi bi-arrow-repeat"></i> Đang đổi ống kính...</span>';
       
-      html5QrCodeScannerInstance.stop().then(() => {
-          startScanner(availableCameras[currentCameraIndex].id);
-      }).catch(err => {
-          startScanner(availableCameras[currentCameraIndex].id);
-      });
+      html5QrCodeScannerInstance.stop().then(() => { startScanner(availableCameras[currentCameraIndex].id); }).catch(err => { startScanner(availableCameras[currentCameraIndex].id); });
   }
 
-  // 4. Khởi chạy quét
   function promptQRScan() {
       if(!document.getElementById('typeCCCD').checked && !document.getElementById('typeCC').checked) {
-          alert('Vui lòng chọn Loại thẻ định danh trước khi quét Mã CCCD!');
-          return;
+          alert('Vui lòng chọn Loại thẻ định danh trước khi quét Mã CCCD!'); return;
       }
       
       document.getElementById('reader').style.display = 'block';
       document.getElementById('btn-cancel-scan').style.display = 'block';
-      document.getElementById('qrStatus').innerHTML = '<span class="text-primary fw-bold"><i class="bi bi-camera"></i> Đang mở camera... <br><small class="text-muted">(Chạm vào khung màn hình để đổi góc thu phóng)</small></span>';
+      document.getElementById('qrStatus').innerHTML = '<span class="text-primary fw-bold"><i class="bi bi-camera"></i> Đang mở camera... (Vui lòng Cấp Quyền Truy Cập Camera)</span>';
 
       if (!html5QrCodeScannerInstance) html5QrCodeScannerInstance = new Html5Qrcode("reader");
 
-      // Quét xem máy có bao nhiêu camera
-      Html5Qrcode.getCameras().then(cameras => {
-          if (cameras && cameras.length > 0) {
-              availableCameras = cameras;
-              
-              // Tìm camera chính phía sau
-              let backCamIndex = cameras.findIndex(c => c.label.toLowerCase().includes('back') || c.label.toLowerCase().includes('sau') || c.label.toLowerCase().includes('0'));
-              currentCameraIndex = backCamIndex !== -1 ? backCamIndex : cameras.length - 1;
-              
-              if(cameras.length > 1) {
-                  document.getElementById('btn-switch-cam').style.display = 'block';
-              }
-              startScanner(cameras[currentCameraIndex].id);
-          } else {
-              startScanner({ facingMode: "environment" });
-          }
-      }).catch(err => {
-          startScanner({ facingMode: "environment" });
-      });
+      // Khởi động luồng camera default để ép hỏi Quyền Truy Cập trước
+      startScanner({ facingMode: "environment" });
   }
 
-  // 5. Mở luồng Video cụ thể
   function startScanner(cameraIdOrConfig) {
-      // Ép khung 1080p, bật Native API (BarcodeDetector) siêu nhạy
       const config = {
-          fps: 15, 
-          // Cho phép quét toàn màn hình để bắt CCCD dễ hơn
-          qrbox: function(viewfinderWidth, viewfinderHeight) {
-              let size = Math.min(viewfinderWidth, viewfinderHeight) * 0.9; 
-              return { width: size, height: size };
-          },
-          experimentalFeatures: {
-              useBarCodeDetectorIfSupported: true // Rất quan trọng cho thẻ CCCD
-          },
+          fps: 10,
+          qrbox: function(vw, vh) { return { width: Math.min(vw, vh) * 0.9, height: Math.min(vw, vh) * 0.9 }; },
+          experimentalFeatures: { useBarCodeDetectorIfSupported: true }, // Tăng độ nhạy với CCCD
           formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ],
-          videoConstraints: {
-              width: { ideal: 1920, min: 1080 },
-              height: { ideal: 1080, min: 720 },
-              focusMode: "continuous"
-          }
+          videoConstraints: { width: { ideal: 1920 }, height: { ideal: 1080 } } // Ép phân giải cao để zoom ko bị vỡ
       };
 
       html5QrCodeScannerInstance.start(
           cameraIdOrConfig, config,
-          (decodedText) => {
-              html5QrCodeScannerInstance.stop().then(() => {
-                  hideScannerUI();
-                  processQRData(decodedText);
-              }).catch(err => console.error(err));
-          },
+          (decodedText) => { html5QrCodeScannerInstance.stop().then(() => { hideScannerUI(); processQRData(decodedText); }).catch(e => console.error(e)); },
           (errorMessage) => { }
       ).then(() => {
-          setTimeout(() => {
-              window.currentZoom = 1.0; 
-              applyCameraZoom();
-          }, 400); 
+          document.getElementById('qrStatus').innerHTML = '<span class="text-primary fw-bold"><i class="bi bi-camera"></i> Chạm vào màn hình để Zoom & Lấy nét</span>';
+          
+          // Lấy danh sách camera SAU KHI đã xin quyền thành công
+          Html5Qrcode.getCameras().then(cameras => {
+              if (cameras && cameras.length > 1) {
+                  availableCameras = cameras;
+                  document.getElementById('btn-switch-cam').style.display = 'block';
+              }
+          });
+
+          setTimeout(() => { window.currentZoom = 1.0; applyCameraZoom(); }, 400); 
       }).catch((err) => {
-          document.getElementById('qrStatus').innerHTML = '<div class="alert alert-danger py-1 mt-2">Lỗi: Không thể mở camera. Vui lòng cấp quyền hoặc thử trình duyệt khác.</div>';
+          document.getElementById('qrStatus').innerHTML = '<div class="alert alert-danger py-1 mt-2 mb-0">Lỗi: Không thể mở camera. Vui lòng kiểm tra quyền.</div>';
           hideScannerUI();
       });
   }
@@ -605,10 +556,7 @@
 
   function cancelQRScan() {
       if (html5QrCodeScannerInstance) {
-          html5QrCodeScannerInstance.stop().then(() => {
-              hideScannerUI();
-              document.getElementById('qrStatus').innerHTML = '';
-          }).catch(err => console.error(err));
+          html5QrCodeScannerInstance.stop().then(() => { hideScannerUI(); document.getElementById('qrStatus').innerHTML = ''; }).catch(e => console.error(e));
       }
   }
 
@@ -651,42 +599,18 @@
 
           statusDiv.innerHTML = '<span class="text-primary fw-bold"><i class="bi bi-arrow-repeat"></i> Đang kiểm tra lịch sử...</span>';
           callGoogleAPI('checkCCCD', {cccd: parts[0]}).then(existingData => {
-             if (existingData) {
-                fillFormWithExistingData(existingData);
-                statusDiv.innerHTML = '<div class="alert alert-warning py-1 mt-2 mb-0"><i class="bi bi-pencil-square"></i> Đã tải lịch sử đăng ký cũ. Sẵn sàng Cập nhật.</div>';
-             } else {
-                document.getElementById('editRowId').value = ""; toggleImageRequired(false); 
-                statusDiv.innerHTML = '<div class="alert alert-success py-1 mt-2 mb-0"><i class="bi bi-check-circle"></i> Quét mới thành công.</div>';
-             }
-          }).catch(err => {
-             statusDiv.innerHTML = '<div class="alert alert-danger py-1 mt-2 mb-0"><i class="bi bi-exclamation-triangle"></i> Lỗi truy xuất: ' + err.message + '</div>';
-          });
-      } else {
-          statusDiv.innerHTML = '<div class="alert alert-danger py-1 mt-2">Lỗi: Định dạng QR không hợp lệ.</div>';
-      }
+             if (existingData) { fillFormWithExistingData(existingData); statusDiv.innerHTML = '<div class="alert alert-warning py-1 mt-2 mb-0"><i class="bi bi-pencil-square"></i> Đã tải lịch sử đăng ký cũ. Sẵn sàng Cập nhật.</div>'; } 
+             else { document.getElementById('editRowId').value = ""; toggleImageRequired(false); statusDiv.innerHTML = '<div class="alert alert-success py-1 mt-2 mb-0"><i class="bi bi-check-circle"></i> Quét mã thành công.</div>'; }
+          }).catch(err => { statusDiv.innerHTML = '<div class="alert alert-danger py-1 mt-2 mb-0"><i class="bi bi-exclamation-triangle"></i> Lỗi truy xuất: ' + err.message + '</div>'; });
+      } else { statusDiv.innerHTML = '<div class="alert alert-danger py-1 mt-2 mb-0">Lỗi: Định dạng QR không hợp lệ.</div>'; }
   }
 
-  function formatDateForInput(dateStr) {
-      if(!dateStr) return '';
-      if(dateStr.includes('/')) {
-          let p = dateStr.split('/');
-          return p[2] + '-' + ('0'+p[1]).slice(-2) + '-' + ('0'+p[0]).slice(-2);
-      }
-      return dateStr;
-  }
-
-  function getFormattedDateFromInput(inputId) {
-      let val = document.getElementById(inputId).value;
-      if(!val) return '';
-      let p = val.split('-');
-      if(p.length === 3) return p[2] + '/' + p[1] + '/' + p[0];
-      return val;
-  }
+  function formatDateForInput(dateStr) { if(!dateStr) return ''; if(dateStr.includes('/')) { let p = dateStr.split('/'); return p[2] + '-' + ('0'+p[1]).slice(-2) + '-' + ('0'+p[0]).slice(-2); } return dateStr; }
+  function getFormattedDateFromInput(inputId) { let val = document.getElementById(inputId).value; if(!val) return ''; let p = val.split('-'); if(p.length === 3) return p[2] + '/' + p[1] + '/' + p[0]; return val; }
 
   function refreshFormClassOptions() {
       callGoogleAPI('getClassCodesForForm').then(codes => {
-          var select = document.getElementById('classCode');
-          var currVal = select.value;
+          var select = document.getElementById('classCode'); var currVal = select.value;
           select.innerHTML = '<option value="" selected disabled>Chọn mã lớp</option>';
           codes.forEach(c => { select.innerHTML += `<option value="${c}">${c}</option>`; });
           if(currVal && codes.includes(currVal)) select.value = currVal;
@@ -751,29 +675,19 @@
       let payloadData = { row: isNew ? '' : rowId, code: code, name: name, qty: qty, visible: visible };
       let actionType = isNew ? 'ADD' : 'EDIT';
       
-      let btn = event.currentTarget;
-      let originalHtml = btn.innerHTML;
-      btn.innerHTML = '<span class="spinner-border spinner-border-sm" style="width: 1rem; height: 1rem;"></span>';
-      btn.disabled = true;
+      let btn = event.currentTarget; let originalHtml = btn.innerHTML;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm" style="width: 1rem; height: 1rem;"></span>'; btn.disabled = true;
       
       callGoogleAPI('saveAdminClassCode', { action: actionType, data: payloadData, password: document.getElementById('adminPassword').value })
-      .then(res => {
-          alert(res.message);
-          loadAdminClasses(); 
-          refreshFormClassOptions();
-      }).catch(err => {
-          btn.innerHTML = originalHtml; btn.disabled = false;
-          alert('Lỗi: ' + err.message);
-      });
+      .then(res => { alert(res.message); loadAdminClasses(); refreshFormClassOptions(); })
+      .catch(err => { btn.innerHTML = originalHtml; btn.disabled = false; alert('Lỗi: ' + err.message); });
   }
 
   function deleteAdminClass(row, code) {
       if(!confirm(`Bạn có chắc muốn xóa vĩnh viễn mã lớp: ${code}?`)) return;
       document.getElementById('adminClassTbody').innerHTML = '<tr><td colspan="5" class="text-center py-3"><div class="spinner-border text-primary spinner-border-sm"></div></td></tr>';
-      
       callGoogleAPI('saveAdminClassCode', { action: 'DELETE', data: {row: row}, password: document.getElementById('adminPassword').value })
-      .then(res => { loadAdminClasses(); refreshFormClassOptions(); })
-      .catch(err => alert("Lỗi: " + err.message));
+      .then(res => { loadAdminClasses(); refreshFormClassOptions(); }).catch(err => alert("Lỗi: " + err.message));
   }
 
   const authModal = new bootstrap.Modal(document.getElementById('authModal')); const settingsModal = new bootstrap.Modal(document.getElementById('settingsModal'));
@@ -782,113 +696,62 @@
   
   function verifyAdmin() { 
       if(document.getElementById('adminPassword').value==="HRPQ") { 
-          authModal.hide(); 
-          callGoogleAPI('getLockSettings').then(s => {
-              document.getElementById('toggleManualLock').checked = s.manualLock; 
-              document.getElementById('inputExpireTime').value = s.expireTime; 
-          });
-          loadAdminClasses();
-          settingsModal.show(); 
-      } else { 
-          document.getElementById('authError').style.display = 'block'; 
-      } 
+          authModal.hide(); callGoogleAPI('getLockSettings').then(s => { document.getElementById('toggleManualLock').checked = s.manualLock; document.getElementById('inputExpireTime').value = s.expireTime; });
+          loadAdminClasses(); settingsModal.show(); 
+      } else { document.getElementById('authError').style.display = 'block'; } 
   }
 
   function saveSettings() { 
       const btn = document.getElementById('btnSaveSettings'); btn.innerHTML = 'Đang lưu...'; btn.disabled = true; 
-      callGoogleAPI('saveLockSettings', {
-          settings: { manualLock: document.getElementById('toggleManualLock').checked, expireTime: document.getElementById('inputExpireTime').value },
-          password: document.getElementById('adminPassword').value
-      }).then(res => {
+      callGoogleAPI('saveLockSettings', { settings: { manualLock: document.getElementById('toggleManualLock').checked, expireTime: document.getElementById('inputExpireTime').value }, password: document.getElementById('adminPassword').value })
+      .then(res => {
           btn.innerHTML = 'Lưu cài đặt khóa form'; btn.disabled = false; 
-          if(res.success) { 
-              alert(res.message); 
-              applyLockState(document.getElementById('toggleManualLock').checked, document.getElementById('inputExpireTime').value); 
-          } else { alert(res.message); } 
-      }).catch(err => {
-          btn.innerHTML = 'Lưu cài đặt khóa form'; btn.disabled = false; 
-          alert("Lỗi lưu cấu hình: " + err.message);
-      });
+          if(res.success) { alert(res.message); applyLockState(document.getElementById('toggleManualLock').checked, document.getElementById('inputExpireTime').value); } else { alert(res.message); } 
+      }).catch(err => { btn.innerHTML = 'Lưu cài đặt khóa form'; btn.disabled = false; alert("Lỗi lưu cấu hình: " + err.message); });
   }
 
   function checkExpiration() {
-    const expireStr = document.getElementById('expireDate').value;
-    const warningDiv = document.getElementById('expireWarning');
+    const expireStr = document.getElementById('expireDate').value; const warningDiv = document.getElementById('expireWarning');
     if (!expireStr) { warningDiv.style.display = 'none'; return; }
-    const expDate = new Date(expireStr);
-    const today = new Date();
-    const diffTime = expDate - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const diffDays = Math.ceil((new Date(expireStr) - new Date()) / (1000 * 60 * 60 * 24));
     if (diffDays <= 30) { warningDiv.style.display = 'block'; } else { warningDiv.style.display = 'none'; }
   }
 
   function autoFillPlaceIssue() {
-    const typeCCCD = document.getElementById('typeCCCD').checked;
-    const typeCC = document.getElementById('typeCC').checked;
-    const placeIssueInput = document.getElementById('placeIssue');
-    const txtPlaceIssue = document.getElementById('txt_placeIssue');
-    
-    if (typeCCCD) { 
-        placeIssueInput.value = "Cục CS quản lý về trật tự XH";
-        txtPlaceIssue.innerText = "Cục CS quản lý về trật tự XH";
-        txtPlaceIssue.classList.add('filled');
-    } else if (typeCC) { 
-        placeIssueInput.value = "Bộ Công An";
-        txtPlaceIssue.innerText = "Bộ Công An";
-        txtPlaceIssue.classList.add('filled');
-    } else { 
-        placeIssueInput.value = "";
-        txtPlaceIssue.innerText = "---";
-        txtPlaceIssue.classList.remove('filled');
-    }
+    const typeCCCD = document.getElementById('typeCCCD').checked; const typeCC = document.getElementById('typeCC').checked;
+    const placeIssueInput = document.getElementById('placeIssue'); const txtPlaceIssue = document.getElementById('txt_placeIssue');
+    if (typeCCCD) { placeIssueInput.value = "Cục CS quản lý về trật tự XH"; txtPlaceIssue.innerText = "Cục CS quản lý về trật tự XH"; txtPlaceIssue.classList.add('filled'); } 
+    else if (typeCC) { placeIssueInput.value = "Bộ Công An"; txtPlaceIssue.innerText = "Bộ Công An"; txtPlaceIssue.classList.add('filled'); } 
+    else { placeIssueInput.value = ""; txtPlaceIssue.innerText = "---"; txtPlaceIssue.classList.remove('filled'); }
   }
 
   function clearLicensePlate() {
-    document.getElementById('licensePlate').value = '';
-    document.getElementById('lpAiInput').value = ''; 
-    croppedFiles.plate = null; 
-    document.getElementById('lpStatus').innerHTML = ''; 
-    document.getElementById('btnClearPlate').style.display = 'none'; 
-    isPlateDuplicate = false; 
-    toggleVehicleType(); 
+    document.getElementById('licensePlate').value = ''; document.getElementById('lpAiInput').value = ''; croppedFiles.plate = null; 
+    document.getElementById('lpStatus').innerHTML = ''; document.getElementById('btnClearPlate').style.display = 'none'; 
+    isPlateDuplicate = false; toggleVehicleType(); 
   }
 
   function handleLicensePlateAI(event) {
     if(event.target.files.length === 0) return;
-    const file = event.target.files[0];
-    const status = document.getElementById('lpStatus');
-    status.innerHTML = "⏳ AI Gemini đang phân tích biển số...";
-    status.className = "small fw-bold text-primary mt-1";
+    const file = event.target.files[0]; const status = document.getElementById('lpStatus');
+    status.innerHTML = "⏳ AI Gemini đang phân tích biển số..."; status.className = "small fw-bold text-primary mt-1";
     
     const readerBase64 = new FileReader();
     readerBase64.onload = () => { 
         croppedFiles.plate = readerBase64.result.split(',')[1]; 
         callGoogleAPI('analyzeLicensePlateWithGemini', { base64: croppedFiles.plate, mimeType: file.type }).then(res => {
-            if(res.error) {
-                status.innerHTML = "❌ Lỗi: " + res.error; 
-                status.className = "small fw-bold text-danger mt-1";
-                return; 
-            }
+            if(res.error) { status.innerHTML = "❌ Lỗi: " + res.error; status.className = "small fw-bold text-danger mt-1"; return; }
             if(res.licensePlate) {
-                document.getElementById('licensePlate').value = res.licensePlate;
-                document.getElementById('btnClearPlate').style.display = 'block';
-                toggleVehicleType();
-                status.innerHTML = "⏳ Đang đối chiếu trùng lặp...";
-                isCheckingDuplicatePlate = true;
+                document.getElementById('licensePlate').value = res.licensePlate; document.getElementById('btnClearPlate').style.display = 'block';
+                toggleVehicleType(); status.innerHTML = "⏳ Đang đối chiếu trùng lặp..."; isCheckingDuplicatePlate = true;
                 
                 callGoogleAPI('checkDuplicateLicensePlate', { plate: res.licensePlate }).then(isDup => {
                     isCheckingDuplicatePlate = false; isPlateDuplicate = isDup;
                     if (isDup) { status.innerHTML = "❌ CẢNH BÁO TRÙNG: Biển số " + res.licensePlate + " đã tồn tại!"; status.className = "small fw-bold text-danger mt-1"; } 
                     else { status.innerHTML = "✅ AI nhận diện: " + res.licensePlate; status.className = "small fw-bold text-success mt-1"; }
                 });
-            } else {
-                status.innerHTML = "⚠️ Không nhận diện rõ biển số. Vui lòng chụp lại ảnh rõ nét hơn.";
-                status.className = "small fw-bold text-warning mt-1";
-            }
-        }).catch(err => {
-            status.innerHTML = "❌ Lỗi kết nối: " + err.message;
-            status.className = "small fw-bold text-danger mt-1";
-        });
+            } else { status.innerHTML = "⚠️ Không nhận diện rõ biển số. Vui lòng chụp lại ảnh rõ nét hơn."; status.className = "small fw-bold text-warning mt-1"; }
+        }).catch(err => { status.innerHTML = "❌ Lỗi kết nối: " + err.message; status.className = "small fw-bold text-danger mt-1"; });
     };
     readerBase64.readAsDataURL(file);
   }
@@ -896,8 +759,7 @@
   function clearOldFormInputs() {
     document.getElementById('classCode').value = ''; document.getElementById('phone').value = ''; document.getElementById('email').value = '';
     document.getElementById('licensePlate').value = ''; document.getElementById('lpAiInput').value = ''; document.getElementById('lpStatus').innerHTML = '';
-    document.getElementById('btnClearPlate').style.display = 'none';
-    document.getElementById('vehicleType').value = ''; document.getElementById('vehicleType').disabled = true;
+    document.getElementById('btnClearPlate').style.display = 'none'; document.getElementById('vehicleType').value = ''; document.getElementById('vehicleType').disabled = true;
     document.getElementById('bankAccount').value = ''; document.getElementById('bankName').value = ''; document.getElementById('bankName').disabled = true;
     document.getElementById('bankBranch').value = ''; document.getElementById('bankBranch').disabled = true;
     document.getElementById('emergencyName').value = ''; document.getElementById('emergencyRelation').value = ''; document.getElementById('emergencyPhone').value = '';
@@ -913,24 +775,14 @@
     document.getElementById('avatarStatus').innerHTML = ''; document.getElementById('frontStatus').innerHTML = ''; document.getElementById('backStatus').innerHTML = '';
   }
 
-  function editCurrentInfo() {
-    document.getElementById('review-content').style.display = 'none';
-    document.getElementById('main-form-content').style.display = 'block';
-    window.scrollTo(0, 0);
-  }
+  function editCurrentInfo() { document.getElementById('review-content').style.display = 'none'; document.getElementById('main-form-content').style.display = 'block'; window.scrollTo(0, 0); }
 
   function resetFormToHome() {
     clearOldFormInputs();
-    document.getElementById('editRowId').value = ""; document.getElementById('cccd').value = "";
-    document.getElementById('fullname').value = ""; document.getElementById('dob').value = "";
-    document.getElementById('address').value = "";
-    document.getElementById('typeCCCD').checked = false; document.getElementById('typeCC').checked = false;
-    window.urlCccdParam = ""; 
-    toggleImageRequired(false);
-    document.getElementById('review-content').style.display = 'none';
-    document.getElementById('main-form-content').style.display = 'block';
-    autoFillPlaceIssue();
-    window.scrollTo(0, 0);
+    document.getElementById('editRowId').value = ""; document.getElementById('cccd').value = ""; document.getElementById('fullname').value = "";
+    document.getElementById('dob').value = ""; document.getElementById('address').value = ""; document.getElementById('typeCCCD').checked = false; document.getElementById('typeCC').checked = false;
+    window.urlCccdParam = ""; toggleImageRequired(false); document.getElementById('review-content').style.display = 'none'; document.getElementById('main-form-content').style.display = 'block';
+    autoFillPlaceIssue(); window.scrollTo(0, 0);
   }
 
   function fillFormWithExistingData(existingData) {
@@ -943,30 +795,20 @@
     if(existingData.dateIssue) { document.getElementById('dateIssue').value = existingData.dateIssue; document.getElementById('txt_dateIssue').innerText = existingData.dateIssue; document.getElementById('txt_dateIssue').classList.add('filled'); }
 
     if(existingData.classCode) {
-        let selectClass = document.getElementById('classCode');
-        let exists = false;
+        let selectClass = document.getElementById('classCode'); let exists = false;
         for (let i = 0; i < selectClass.options.length; i++) { if (selectClass.options[i].value === existingData.classCode) { exists = true; break; } }
         if (!exists) { let newOpt = document.createElement('option'); newOpt.value = existingData.classCode; newOpt.text = existingData.classCode; selectClass.add(newOpt); }
         selectClass.value = existingData.classCode;
     }
     
-    if(existingData.placeIssue) {
-        if(existingData.placeIssue.includes("Cục CS")) { document.getElementById('typeCCCD').checked = true; } 
-        else { document.getElementById('typeCC').checked = true; }
-        autoFillPlaceIssue();
-    }
-
+    if(existingData.placeIssue) { if(existingData.placeIssue.includes("Cục CS")) { document.getElementById('typeCCCD').checked = true; } else { document.getElementById('typeCC').checked = true; } autoFillPlaceIssue(); }
     if(existingData.phone) document.getElementById('phone').value = existingData.phone;
     if(existingData.licensePlate) { document.getElementById('licensePlate').value = existingData.licensePlate; document.getElementById('btnClearPlate').style.display = 'block'; }
     
-    toggleVehicleType(); 
-    if(existingData.vehicleType) document.getElementById('vehicleType').value = existingData.vehicleType;
+    toggleVehicleType(); if(existingData.vehicleType) document.getElementById('vehicleType').value = existingData.vehicleType;
     if(existingData.bankAccount) document.getElementById('bankAccount').value = existingData.bankAccount;
-    toggleBankInfo();
-    if(existingData.bankName) document.getElementById('bankName').value = existingData.bankName; 
-    if(existingData.bankBranch) document.getElementById('bankBranch').value = existingData.bankBranch;
-    if(existingData.emergencyName) document.getElementById('emergencyName').value = existingData.emergencyName; 
-    if(existingData.emergencyRelation) document.getElementById('emergencyRelation').value = existingData.emergencyRelation;
+    toggleBankInfo(); if(existingData.bankName) document.getElementById('bankName').value = existingData.bankName; if(existingData.bankBranch) document.getElementById('bankBranch').value = existingData.bankBranch;
+    if(existingData.emergencyName) document.getElementById('emergencyName').value = existingData.emergencyName; if(existingData.emergencyRelation) document.getElementById('emergencyRelation').value = existingData.emergencyRelation;
     if(existingData.emergencyPhone) document.getElementById('emergencyPhone').value = existingData.emergencyPhone;
     if(existingData.email) document.getElementById('email').value = existingData.email;
     if(existingData.expireDate) { document.getElementById('expireDate').value = formatDateForInput(existingData.expireDate); checkExpiration(); }
@@ -978,7 +820,6 @@
     }
     if(existingData.frontUrl) { document.getElementById('previewFront').src = getDriveImgUrl(existingData.frontUrl); document.getElementById('previewFront').style.display = 'block'; }
     if(existingData.backUrl) { document.getElementById('previewBack').src = getDriveImgUrl(existingData.backUrl); document.getElementById('previewBack').style.display = 'block'; }
-
     toggleImageRequired(true);
   }
 
@@ -1004,13 +845,10 @@
     if (!/^(0[3|5|7|8|9])[0-9]{8}$/.test(document.getElementById('emergencyPhone').value.trim())) { alert("Số điện thoại người thân không hợp lệ!"); return; }
     if (!isEdit && (!croppedFiles.avatar || !croppedFiles.front || !croppedFiles.back)) { alert("Vui lòng chụp và cắt đủ 3 ảnh hồ sơ!"); return; }
 
-    isSubmitting = true;
-    const btnSubmit = document.getElementById('btnSubmitForm');
-    btnSubmit.disabled = true;
-    btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> ĐANG XỬ LÝ...';
+    isSubmitting = true; const btnSubmit = document.getElementById('btnSubmitForm');
+    btnSubmit.disabled = true; btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> ĐANG XỬ LÝ...';
 
-    document.getElementById('loader').style.display = 'block';
-    const progressBar = document.getElementById('uploadProgress'); const progressText = document.getElementById('progressText');
+    document.getElementById('loader').style.display = 'block'; const progressBar = document.getElementById('uploadProgress'); const progressText = document.getElementById('progressText');
     let prog = 0; let timer = setInterval(() => { prog += 5; if (prog > 90) prog = 95; progressBar.style.width = prog + '%'; progressText.innerText = isEdit ? 'Đang cập nhật... ' + prog + '%' : 'Đang gửi... ' + prog + '%'; }, 400);
 
     const formData = {
@@ -1041,7 +879,6 @@
         document.getElementById('r_vehicleType').innerText = formData.vehicleType || 'Không có';
         document.getElementById('r_bankAccount').innerText = formData.bankAccount ? formData.bankAccount + ' - ' + formData.bankName + ' (' + formData.bankBranch + ')' : 'Không có - ()';
         document.getElementById('r_emergencyName').innerText = formData.emergencyName + ' (' + formData.emergencyRelation + ') - ĐT: ' + formData.emergencyPhone;
-
         document.getElementById('r_img_avatar').src = resObj.avatarUrl || document.getElementById('previewAvatar').src;
         document.getElementById('r_img_front').src = resObj.frontUrl || document.getElementById('previewFront').src;
         document.getElementById('r_img_back').src = resObj.backUrl || document.getElementById('previewBack').src;
