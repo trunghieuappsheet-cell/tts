@@ -69,16 +69,17 @@
     .review-img-wrap { display: inline-block; margin: 8px; text-align: center; vertical-align: top; }
     .review-img-wrap img { border: 1px solid #ddd; border-radius: 8px; object-fit: cover; box-shadow: 0 2px 5px rgba(0,0,0,0.05); background-color: #fafafa; }
 
-    /* THÊM CSS HIỆU ỨNG CHẠM LẤY NÉT */
-    #reader { position: relative; width: 100%; margin-top: 15px; border-radius: 8px; overflow: hidden; border: 2px dashed #2D6F4B; }
+    /* CSS GIAO DIỆN LẤY NÉT CHẠM MÀN HÌNH */
+    #reader { position: relative; width: 100%; margin-top: 15px; border-radius: 8px; overflow: hidden; border: 2px dashed #2D6F4B; display: none; }
     .focus-box {
-      position: absolute; width: 50px; height: 50px; border: 2px solid #28a745;
+      position: absolute; width: 60px; height: 60px; border: 3px solid #00ff00;
       border-radius: 8px; pointer-events: none; transform: translate(-50%, -50%);
       animation: focus-pulse 0.4s ease-out; z-index: 1000;
+      box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
     }
     @keyframes focus-pulse {
       0% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
-      50% { opacity: 1; border-color: #fff; }
+      50% { opacity: 1; border-color: #ffffff; }
       100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
     }
   </style>
@@ -129,7 +130,8 @@
         </button>
       </div>
       
-      <div id="reader" style="display: none;"></div>
+      <!-- KHU VỰC CAMERA QUÉT QR -->
+      <div id="reader"></div>
       <button type="button" id="btn-cancel-scan" class="btn btn-danger btn-sm w-100 py-2 fw-bold mt-2" style="display: none;" onclick="cancelQRScan()">
         <i class="bi bi-x-circle"></i> HỦY QUÉT
       </button>
@@ -368,7 +370,7 @@
   </div>
 </div>
 
-<!-- Các Modals giữ nguyên -->
+<!-- Modal Quản trị & Tool -->
 <div class="modal fade" id="authModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow"><div class="modal-header bg-dark text-white"><h5 class="modal-title"><i class="bi bi-shield-lock-fill"></i> Xác thực Quản trị</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body text-center p-4"><input type="password" id="adminPassword" class="form-control text-center fw-bold letter-spacing-2 mb-3" placeholder="Nhập mật khẩu..."><div id="authError" class="text-danger small fw-bold mb-2" style="display:none;">Sai mật khẩu!</div><button class="btn btn-dark w-100" onclick="verifyAdmin()">Đăng nhập</button></div></div></div></div>
 <div class="modal fade" id="settingsModal" tabindex="-1" data-bs-backdrop="static"><div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content border-0 shadow"><div class="modal-header bg-primary text-white"><h5 class="modal-title"><i class="bi bi-gear-fill"></i> Quản trị hệ thống</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-0"><ul class="nav nav-tabs px-3 pt-3" id="adminTabs" role="tablist"><li class="nav-item" role="presentation"><button class="nav-link active fw-bold text-success" id="tab-lock" data-bs-toggle="tab" data-bs-target="#pane-lock" type="button" role="tab"><i class="bi bi-shield-lock-fill"></i> Khóa Form</button></li><li class="nav-item" role="presentation"><button class="nav-link fw-bold text-primary" id="tab-class" data-bs-toggle="tab" data-bs-target="#pane-class" type="button" role="tab"><i class="bi bi-card-list"></i> Mã Lớp</button></li></ul><div class="tab-content p-4 bg-white" id="adminTabsContent"><div class="tab-pane fade show active" id="pane-lock" role="tabpanel"><div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom"><div><h6 class="mb-1 fw-bold text-dark"><i class="bi bi-lock-fill text-danger"></i> Khóa form thủ công</h6></div><div class="form-check form-switch"><input class="form-check-input fs-4" type="checkbox" id="toggleManualLock"></div></div><div class="mb-4"><h6 class="mb-1 fw-bold text-dark"><i class="bi bi-clock-history text-primary"></i> Khóa tự động theo thời gian</h6><input type="datetime-local" id="inputExpireTime" class="form-control"></div><div class="text-end"><button type="button" class="btn btn-primary px-4 fw-bold" id="btnSaveSettings" onclick="saveSettings()">Lưu cài đặt khóa form</button></div></div><div class="tab-pane fade" id="pane-class" role="tabpanel"><div class="d-flex justify-content-between mb-3"><h6 class="fw-bold text-dark align-self-center mb-0">Danh sách quản lý mã lớp</h6><button class="btn btn-sm btn-success fw-bold shadow-sm" onclick="addNewInlineClass()"><i class="bi bi-plus-circle"></i> Thêm dòng mới</button></div><div class="table-responsive border rounded" style="max-height: 400px; overflow-y:auto;"><table class="table table-sm table-hover align-middle mb-0"><thead class="table-light text-secondary" style="position: sticky; top: 0; z-index: 1;"><tr><th class="ps-2">Mã lớp</th><th>Tên lớp</th><th class="text-center">Chỉ tiêu</th><th class="text-center">Hiển thị</th><th class="text-end pe-2">Hành động</th></tr></thead><tbody id="adminClassTbody"></tbody></table></div></div></div></div></div></div></div>
 <div class="modal fade" id="cropModal" data-bs-backdrop="static" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content"><div class="modal-header bg-success text-white"><h5 class="modal-title">Cắt chỉnh hình ảnh</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-0"><div class="img-container"><img id="imageToCrop"></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button><button type="button" class="btn btn-success" id="cropConfirmBtn">Xác nhận cắt</button></div></div></div></div>
@@ -380,18 +382,19 @@
 
 <script>
   // =========================================================
-  // BẮT BUỘC: Bạn phải vào Apps Script bấm Deploy > New Version (Phiên bản mới)
-  // và copy link đuôi /exec dán vào biến API_URL bên dưới.
+  // BẮT BUỘC: Bạn phải vào Apps Script bấm Deploy > Manage Deployments > Bút chì (Edit) > New Version (Phiên bản mới)
+  // và copy link đuôi /exec mới nhất dán vào biến API_URL bên dưới.
   // =========================================================
   const API_URL = "https://script.google.com/macros/s/AKfycbwrtLgAK-djLst91t_7vz3q8743IHIJavF9rZ8e8B42e9qacetq3-hIiJrfT5DEUb_aXg/exec";
 
-  // Hàm gọi API (Xóa redirect: "follow" để tránh lỗi CORS chặn ngang trên mobile)
+  // Hàm gọi API
   async function callGoogleAPI(actionName, payloadData = null) {
       try {
           let response = await fetch(API_URL, {
               method: 'POST',
               headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-              body: JSON.stringify({ action: actionName, payload: payloadData })
+              body: JSON.stringify({ action: actionName, payload: payloadData }),
+              redirect: "follow" // <--- FIX LỖI FAILED TO FETCH KHI GỌI TỪ GITHUB
           });
           let result = await response.json();
           if (result.success) {
@@ -413,6 +416,7 @@
   let isCheckingDuplicatePlate = false; let isPlateDuplicate = false;
   let isSubmitting = false; 
   let html5QrCodeScannerInstance = null;
+  let scanHuntInterval = null; // Biến giữ vòng lặp auto-hunt camera
 
   window.onload = function() {
     document.getElementById('typeCCCD').checked = false;
@@ -441,10 +445,10 @@
     }
   };
 
-  // ================= CHẠM VÀO MÀN HÌNH ĐỂ LẤY NÉT =================
+  // ================= TÍNH NĂNG CHẠM ĐỂ LẤY NÉT (TAP TO FOCUS) =================
   const readerElement = document.getElementById('reader');
   readerElement.addEventListener('click', async (e) => {
-      // 1. Tạo ô vuông nhấp nháy tạo hiệu ứng chạm (Visual effect)
+      // 1. Hiển thị ô vuông nhấp nháy xanh tại vị trí chạm (UX)
       const rect = readerElement.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
@@ -454,23 +458,36 @@
       focusBox.style.left = x + 'px';
       focusBox.style.top = y + 'px';
       readerElement.appendChild(focusBox);
-      setTimeout(() => focusBox.remove(), 400); // Xóa sau 0.4s
+      setTimeout(() => focusBox.remove(), 400);
 
-      // 2. Ép Camera gọi API lấy nét lại
-      if (html5QrCodeScannerInstance) {
-          try {
-              const video = document.querySelector('#reader video');
-              if (video && video.srcObject) {
-                  const track = video.srcObject.getVideoTracks()[0];
-                  // Ép reset focus mode (cách workaround hiệu quả trên di động)
+      // 2. Ép phần cứng Camera lấy nét và xoay vòng Zoom
+      try {
+          const video = document.querySelector('#reader video');
+          if (video && video.srcObject) {
+              const track = video.srcObject.getVideoTracks()[0];
+              const caps = track.getCapabilities();
+              
+              if (caps.zoom) {
+                  let zMin = caps.zoom.min || 1;
+                  let zMax = caps.zoom.max || 4;
+                  // Mỗi lần chạm, tăng zoom lên 1.0. Nếu vượt quá, quay về nhỏ nhất.
+                  window.currentZoom = (window.currentZoom || 1.5) + 1.0;
+                  if(window.currentZoom > Math.min(zMax, 5)) window.currentZoom = Math.max(zMin, 1.5);
+                  
+                  await track.applyConstraints({ 
+                      advanced: [{ focusMode: "continuous", zoom: window.currentZoom }] 
+                  });
+              } else {
+                  // Chỉ lấy nét nếu máy không hỗ trợ quang học zoom
                   await track.applyConstraints({ advanced: [{ focusMode: "continuous" }] });
               }
-          } catch(err) {
-              console.log("Thiết bị không hỗ trợ API chỉnh lấy nét thủ công:", err);
           }
+      } catch(err) {
+          console.log("Thiết bị không hỗ trợ API chỉnh thủ công:", err);
       }
   });
 
+  // ================= KHỞI ĐỘNG QUÉT MÃ QR & AUTO-HUNT =================
   function promptQRScan() {
       if(!document.getElementById('typeCCCD').checked && !document.getElementById('typeCC').checked) {
           alert('Vui lòng chọn Loại thẻ định danh trước khi quét Mã CCCD!');
@@ -479,26 +496,25 @@
       
       document.getElementById('reader').style.display = 'block';
       document.getElementById('btn-cancel-scan').style.display = 'block';
-      document.getElementById('qrStatus').innerHTML = '<span class="text-primary fw-bold"><i class="bi bi-camera"></i> Đang mở camera... (Chạm vào vùng video để lấy nét)</span>';
+      document.getElementById('qrStatus').innerHTML = '<span class="text-primary fw-bold"><i class="bi bi-camera"></i> Đang mở camera... <br><small class="text-muted">(Chạm vào màn hình để tự căn nét)</small></span>';
 
       if (!html5QrCodeScannerInstance) {
           html5QrCodeScannerInstance = new Html5Qrcode("reader");
       }
 
-      // Cấu hình video chuyên sâu cho QR (Macro)
       const config = {
-          fps: 10, 
+          fps: 15, // Tăng tốc độ quét (frame per sec)
           qrbox: { width: 250, height: 250 },
           aspectRatio: 1.0, 
-          videoConstraints: {
-              facingMode: "environment",
-              focusMode: "continuous" // Khởi động mặc định cố gắng lấy nét liên tục
-          }
+          videoConstraints: { facingMode: "environment" }
       };
 
       html5QrCodeScannerInstance.start(
           { facingMode: "environment" }, config,
           (decodedText, decodedResult) => {
+              // Hủy vòng lặp săn mã nếu quét thành công
+              if(scanHuntInterval) clearInterval(scanHuntInterval);
+              
               html5QrCodeScannerInstance.stop().then(() => {
                   document.getElementById('reader').style.display = 'none';
                   document.getElementById('btn-cancel-scan').style.display = 'none';
@@ -506,7 +522,44 @@
               }).catch(err => { console.error("Failed to stop scanner", err); });
           },
           (errorMessage) => { }
-      ).catch((err) => {
+      ).then(() => {
+          // BẬT AUTO ZOOM QUANG HỌC VÀ LẤY NÉT NGAY KHI CAMERA MỞ LÊN (Khoảng 0.5s sau khi luồng live bắt đầu)
+          setTimeout(async () => {
+              try {
+                  const video = document.querySelector('#reader video');
+                  if (!video || !video.srcObject) return;
+                  const track = video.srcObject.getVideoTracks()[0];
+                  const caps = track.getCapabilities();
+                  
+                  // Mức zoom lý tưởng để QR to tràn khung
+                  window.currentZoom = 2.5; 
+                  
+                  if (caps.zoom) {
+                      window.currentZoom = Math.min(caps.zoom.max, Math.max(caps.zoom.min, 2.5));
+                  }
+                  
+                  // Áp dụng ngay Zoom + AutoFocus liên tục
+                  await track.applyConstraints({ 
+                      advanced: [{ focusMode: "continuous", zoom: window.currentZoom }] 
+                  });
+
+                  // VÒNG LẶP AUTO-HUNT: Mỗi 2 giây đảo zoom quang học siêu vi (0.1x) để ép ống kính điện thoại phải tự canh lại nét (chống kẹt Focus)
+                  let toggle = false;
+                  scanHuntInterval = setInterval(async () => {
+                      try {
+                          if(caps.zoom) {
+                              toggle = !toggle;
+                              let huntZoom = toggle ? window.currentZoom + 0.1 : window.currentZoom - 0.1;
+                              huntZoom = Math.min(caps.zoom.max, Math.max(caps.zoom.min, huntZoom));
+                              await track.applyConstraints({ advanced: [{ focusMode: "continuous", zoom: huntZoom }] });
+                          }
+                      } catch(e){}
+                  }, 2000);
+
+              } catch(e) { console.log("Không thể ép auto-zoom/focus:", e); }
+          }, 500);
+
+      }).catch((err) => {
           document.getElementById('qrStatus').innerHTML = '<div class="alert alert-danger py-1 mt-2">Lỗi: Không thể mở camera. Vui lòng cấp quyền hoặc thử trình duyệt khác.</div>';
           document.getElementById('reader').style.display = 'none';
           document.getElementById('btn-cancel-scan').style.display = 'none';
@@ -514,6 +567,7 @@
   }
 
   function cancelQRScan() {
+      if(scanHuntInterval) clearInterval(scanHuntInterval);
       if (html5QrCodeScannerInstance) {
           html5QrCodeScannerInstance.stop().then(() => {
               document.getElementById('reader').style.display = 'none';
