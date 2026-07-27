@@ -435,11 +435,11 @@
   };
 
   // -------------------------------------------------------------
-  // THUẬT TOÁN QUÉT QR & LẤY NÉT CHẠM GIỐNG GOOGLE LENS
+  // THUẬT TOÁN QUÉT QR & LẤY NÉT CHẠM GIỐNG GOOGLE LENS (AUTO ZOOM 2.5X)
   // -------------------------------------------------------------
   const readerElement = document.getElementById('reader');
   
-  // Sự kiện CHẠM ĐỂ LẤY NÉT (UX giống app Native)
+  // Sự kiện CHẠM ĐỂ LẤY NÉT & THAY ĐỔI ZOOM
   readerElement.addEventListener('click', async (e) => {
       const rect = readerElement.getBoundingClientRect();
       const x = e.clientX - rect.left;
@@ -457,8 +457,21 @@
               const video = document.querySelector('#reader video');
               if (video && video.srcObject) {
                   const track = video.srcObject.getVideoTracks()[0];
-                  // Ép lại constraints để module phần cứng tính toán lại nét
-                  await track.applyConstraints({ advanced: [{ focusMode: "continuous" }] });
+                  const caps = track.getCapabilities();
+                  
+                  if (caps.zoom) {
+                      let zMin = caps.zoom.min || 1;
+                      let zMax = caps.zoom.max || 4;
+                      // Xoay vòng zoom khi chạm: Tăng thêm 1.0, nếu vượt ngưỡng thì về lại min
+                      window.currentZoom = (window.currentZoom || 2.5) + 1.0;
+                      if(window.currentZoom > Math.min(zMax, 5)) window.currentZoom = Math.max(zMin, 1.5);
+                      
+                      await track.applyConstraints({ 
+                          advanced: [{ focusMode: "continuous", zoom: window.currentZoom }] 
+                      });
+                  } else {
+                      await track.applyConstraints({ advanced: [{ focusMode: "continuous" }] });
+                  }
               }
           } catch(err) { console.log("Thiết bị không hỗ trợ ép nét thủ công."); }
       }
@@ -484,7 +497,7 @@
           useBarCodeDetectorIfSupported: true, // NATIVE API như Google Lens
           videoConstraints: {
               facingMode: "environment",
-              width: { ideal: 1920 }, // Độ phân giải cao không cần zoom thụt thò
+              width: { ideal: 1920 }, // Độ phân giải cao
               height: { ideal: 1080 }
           }
       };
@@ -499,7 +512,27 @@
               }).catch(err => console.error("Failed to stop scanner", err));
           },
           (errorMessage) => { }
-      ).catch((err) => {
+      ).then(() => {
+          // ================= AUTO ZOOM 2.5x NGAY SAU KHI KHỞI ĐỘNG =================
+          setTimeout(async () => {
+              try {
+                  const video = document.querySelector('#reader video');
+                  if (!video || !video.srcObject) return;
+                  const track = video.srcObject.getVideoTracks()[0];
+                  const caps = track.getCapabilities();
+                  
+                  if (caps.zoom) {
+                      // Ép zoom quang học vào mức 2.5x ngay từ đầu (hoặc tối đa theo phần cứng)
+                      window.currentZoom = Math.min(caps.zoom.max, Math.max(caps.zoom.min, 2.5));
+                      await track.applyConstraints({ 
+                          advanced: [{ zoom: window.currentZoom, focusMode: "continuous" }] 
+                      });
+                  } else {
+                      await track.applyConstraints({ advanced: [{ focusMode: "continuous" }] });
+                  }
+              } catch(e) { console.log("Không thể ép auto-zoom 2.5x ban đầu:", e); }
+          }, 500); // Trì hoãn 0.5s để đảm bảo video stream đã chạy mượt
+      }).catch((err) => {
           document.getElementById('qrStatus').innerHTML = '<div class="alert alert-danger py-1 mt-2">Lỗi: Không thể mở camera. Vui lòng cấp quyền hoặc thử trình duyệt khác.</div>';
           document.getElementById('reader').style.display = 'none';
           document.getElementById('btn-cancel-scan').style.display = 'none';
