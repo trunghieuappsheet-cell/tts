@@ -1,412 +1,60 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="dom_siteTitle">EEC Education</title>
-    <link id="dynamic-favicon" rel="icon" href="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" type="image/x-icon">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
-        :root { --primary-color: #0c389b; }
-        body { font-family: 'Roboto', sans-serif; scroll-behavior: smooth; }
-        .bg-brand { background-color: var(--primary-color); }
-        .text-brand { color: var(--primary-color); }
-        .border-brand { border-color: var(--primary-color); }
-        .bg-brand-orange { background-color: #f1c40f; }
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-        .prep-form-bg { background: linear-gradient(135deg, #01378A 0%, #0070F4 100%); }
-        .prep-input { width: 100%; padding: 12px 16px; border-radius: 8px; color: #333; outline: none; font-size: 14px; border: none; }
-        .prep-label { display: block; color: white; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
-    </style>
+  <!-- Tiêu đề -->
+  <title>Đăng ký thông tin thực tập</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png?v=3"/>
+
+  <!-- Preview khi gửi link -->
+  <meta property="og:title" content="Đăng ký thông tin thực tập">
+  <meta property="og:description" content="Hệ thống đăng ký thông tin thực tập trực tuyến">
+  <meta property="og:image" content="https://tts.hama.io.vn/logo.png">
+  <meta property="og:url" content="https://tts.hama.io.vn">
+  <meta property="og:type" content="website">
+
+  <!-- Twitter / Discord -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Đăng ký thông tin thực tập">
+  <meta name="twitter:description" content="Hệ thống đăng ký thông tin thực tập trực tuyến">
+  <meta name="twitter:image" content="https://tts.hama.io.vn/logo.png">
+
+  <style>
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+    }
+
+    html,body{
+      width:100%;
+      height:100%;
+      overflow:hidden;
+      background:#ffffff;
+      font-family:Arial,sans-serif;
+    }
+
+    iframe{
+      width:100%;
+      height:100%;
+      border:none;
+      position:fixed;
+      inset:0;
+      background:#ffffff;
+    }
+  </style>
 </head>
-<body class="bg-gray-50 text-gray-800">
 
-    <header class="bg-white shadow-sm sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-            <a href="#" class="text-3xl font-black text-brand tracking-tighter">EEC EDUCATION</a>
-            <div class="flex items-center gap-4">
-                <span id="welcomeMsg" class="font-bold text-gray-600 hidden"></span>
-                <button id="loginBtn" class="text-brand font-bold px-4 py-2 border border-brand rounded hover:bg-gray-50">Đăng nhập</button>
-                <button id="logoutBtn" class="hidden text-red-600 font-bold px-4 py-2 border border-red-600 rounded hover:bg-red-50">Đăng xuất</button>
-                <button id="adminToggleBtn" class="hidden bg-yellow-400 text-black px-4 py-2 rounded font-bold hover:bg-yellow-500"><i class="fa fa-edit"></i> Chỉnh sửa Web</button>
-            </div>
-        </div>
-    </header>
+<body>
 
-    <!-- Admin Panel -->
-    <div id="adminPanel" class="hidden fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 relative">
-            <button onclick="document.getElementById('adminPanel').classList.add('hidden')" class="absolute top-4 right-4 text-gray-500 hover:text-black text-2xl"><i class="fa fa-times"></i></button>
-            <h2 class="text-2xl font-bold text-brand mb-6 border-b pb-2"><i class="fa fa-cogs"></i> Quản trị nội dung Website</h2>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                <div class="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-100 p-4 rounded">
-                    <div>
-                        <label class="block font-bold mb-1">Màu chủ đạo (Mã Hex):</label>
-                        <input type="color" id="edit_primaryColor" class="w-full h-10 rounded cursor-pointer">
-                    </div>
-                    <div>
-                        <label class="block font-bold mb-1">Tên Website (Title tab):</label>
-                        <input type="text" id="edit_siteTitle" class="w-full border p-2 rounded">
-                    </div>
-                    <div>
-                        <label class="block font-bold mb-1">Favicon (Tải lên Drive):</label>
-                        <input type="file" id="edit_favicon" accept="image/*,.ico" class="w-full border p-2 rounded bg-white">
-                    </div>
-                </div>
+  <!-- Website -->
+  <iframe
+    src="https://script.google.com/macros/s/AKfycbwrtLgAK-djLst91t_7vz3q8743IHIJavF9rZ8e8B42e9qacetq3-hIiJrfT5DEUb_aXg/exec">
+  </iframe>
 
-                <div>
-                    <label class="block font-bold mb-1">Tiêu đề Banner:</label>
-                    <input type="text" id="edit_heroTitle" class="w-full border p-2 rounded">
-                    <label class="block font-bold mb-1 mt-2">Ảnh Banner (Tải lên Drive):</label>
-                    <input type="file" id="edit_bannerImage" accept="image/*" class="w-full border p-2 rounded">
-                </div>
-                <div>
-                    <label class="block font-bold mb-1">Mô tả Banner:</label>
-                    <textarea id="edit_heroSubtitle" rows="4" class="w-full border p-2 rounded"></textarea>
-                </div>
-
-                <div>
-                    <label class="block font-bold mb-1">Tên Khóa 1:</label>
-                    <input type="text" id="edit_course1Title" class="w-full border p-2 rounded">
-                    <label class="block font-bold mb-1 mt-2">Ảnh Khóa 1 (Tải lên Drive):</label>
-                    <input type="file" id="edit_course1Img" accept="image/*" class="w-full border p-2 rounded">
-                </div>
-                <div>
-                    <label class="block font-bold mb-1">Mô tả Khóa 1:</label>
-                    <textarea id="edit_course1Desc" rows="4" class="w-full border p-2 rounded"></textarea>
-                </div>
-
-                <div>
-                    <label class="block font-bold mb-1">Tên Khóa 2:</label>
-                    <input type="text" id="edit_course2Title" class="w-full border p-2 rounded">
-                    <label class="block font-bold mb-1 mt-2">Ảnh Khóa 2 (Tải lên Drive):</label>
-                    <input type="file" id="edit_course2Img" accept="image/*" class="w-full border p-2 rounded">
-                </div>
-                <div>
-                    <label class="block font-bold mb-1">Mô tả Khóa 2:</label>
-                    <textarea id="edit_course2Desc" rows="4" class="w-full border p-2 rounded"></textarea>
-                </div>
-
-                <div>
-                    <label class="block font-bold mb-1">Tiêu đề Form Đăng ký:</label>
-                    <textarea id="edit_formTitle" rows="2" class="w-full border p-2 rounded"></textarea>
-                </div>
-                <div>
-                    <label class="block font-bold mb-1">Mô tả Form Đăng ký:</label>
-                    <textarea id="edit_formSubtitle" rows="2" class="w-full border p-2 rounded"></textarea>
-                </div>
-            </div>
-
-            <div class="mt-6 flex justify-end">
-                <button id="saveConfigBtn" class="bg-green-600 text-white font-bold px-8 py-3 rounded hover:bg-green-700 transition">
-                    <i class="fa fa-save"></i> Lưu tất cả thay đổi
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Login -->
-    <div id="loginModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-        <div class="bg-white p-8 rounded-xl w-96 relative shadow-2xl">
-            <button onclick="document.getElementById('loginModal').classList.add('hidden')" class="absolute top-4 right-4 text-gray-500 hover:text-black"><i class="fa fa-times"></i></button>
-            <h2 class="text-2xl font-bold text-center text-brand mb-6">Đăng nhập</h2>
-            <form id="loginForm" class="space-y-4">
-                <input type="text" id="l_user" placeholder="Tên đăng nhập" required class="w-full px-4 py-2 border rounded">
-                <input type="password" id="l_pass" placeholder="Mật khẩu" required class="w-full px-4 py-2 border rounded">
-                <button type="submit" id="submitLoginBtn" class="w-full bg-brand text-white py-2 rounded font-bold hover:opacity-90">Đăng nhập</button>
-                <p id="loginErr" class="text-red-500 text-sm text-center hidden"></p>
-            </form>
-        </div>
-    </div>
-
-    <!-- Hero Banner -->
-    <section class="bg-black py-20 text-center text-white relative">
-        <img id="dom_bannerImage" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" class="absolute inset-0 w-full h-full object-cover opacity-50 z-0">
-        <div class="absolute inset-0 bg-brand opacity-60 z-0 mix-blend-multiply"></div>
-        <div class="max-w-5xl mx-auto px-4 relative z-10">
-            <h1 id="dom_heroTitle" class="text-3xl md:text-5xl font-bold mb-4 uppercase">Đang tải dữ liệu...</h1>
-            <p id="dom_heroSubtitle" class="text-lg md:text-xl font-light mb-8">Vui lòng chờ trong giây lát</p>
-            <a href="#tu-van" class="bg-brand-orange text-brand font-bold py-3 px-8 rounded-full text-lg hover:bg-yellow-500 transition">Nhận tư vấn ngay</a>
-        </div>
-    </section>
-
-    <!-- Khóa Học VIP -->
-    <section class="bg-gray-200 py-16">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="text-center mb-12"><h2 class="text-3xl font-bold text-brand uppercase">Khóa học tiếng Anh Online VIP</h2></div>
-            <div class="space-y-12">
-                <div class="flex flex-col md:flex-row bg-white rounded-2xl overflow-hidden shadow-md">
-                    <div class="md:w-1/2 bg-gray-100 flex items-center justify-center">
-                        <img id="dom_course1Img" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" class="w-full h-full object-cover min-h-[300px]">
-                    </div>
-                    <div class="md:w-1/2 p-8 lg:p-12 flex flex-col justify-center">
-                        <h3 id="dom_course1Title" class="text-2xl font-bold text-brand mb-4 uppercase">Đang tải...</h3>
-                        <p id="dom_course1Desc" class="text-gray-600 mb-6 text-justify"></p>
-                        <a href="#tu-van" class="inline-block border-2 border-brand text-brand font-bold py-2 px-6 rounded hover:bg-brand hover:text-white transition w-max">Đăng ký học</a>
-                    </div>
-                </div>
-
-                <div class="flex flex-col md:flex-row-reverse bg-white rounded-2xl overflow-hidden shadow-md">
-                    <div class="md:w-1/2 bg-gray-100 flex items-center justify-center">
-                        <img id="dom_course2Img" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" class="w-full h-full object-cover min-h-[300px]">
-                    </div>
-                    <div class="md:w-1/2 p-8 lg:p-12 flex flex-col justify-center">
-                        <h3 id="dom_course2Title" class="text-2xl font-bold text-brand mb-4 uppercase">Đang tải...</h3>
-                        <p id="dom_course2Desc" class="text-gray-600 mb-6 text-justify"></p>
-                        <a href="#tu-van" class="inline-block border-2 border-brand text-brand font-bold py-2 px-6 rounded hover:bg-brand hover:text-white transition w-max">Đăng ký học</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Form Đăng ký -->
-    <section id="tu-van" class="py-16 max-w-7xl mx-auto px-4">
-        <div class="prep-form-bg rounded-3xl p-8 lg:p-12 flex flex-col lg:flex-row gap-12 shadow-2xl relative overflow-hidden">
-            <div class="lg:w-5/12 flex flex-col justify-center z-10">
-                <h2 id="dom_formTitle" class="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight whitespace-pre-line">Đang tải...</h2>
-                <p id="dom_formSubtitle" class="text-white text-lg font-medium opacity-90 mb-12"></p>
-                <div class="mt-auto hidden lg:block text-center"><i class="fa-solid fa-robot text-9xl text-yellow-400 opacity-80 animate-bounce"></i></div>
-            </div>
-
-            <div class="lg:w-7/12 z-10">
-                <form id="consultForm" class="space-y-4">
-                    <div><label class="prep-label">Họ và tên (*)</label><input type="text" id="f_name" required class="prep-input"></div>
-                    <div>
-                        <label class="prep-label">Số điện thoại (*)</label>
-                        <div class="flex bg-white rounded-lg overflow-hidden">
-                            <select class="bg-gray-100 px-3 border-r outline-none font-medium text-sm text-gray-700"><option>+84</option></select>
-                            <input type="tel" id="f_phone" required class="prep-input rounded-none border-none">
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label class="prep-label">Năm sinh (*)</label><input type="number" id="f_year" required class="prep-input"></div>
-                        <div><label class="prep-label">Email (*)</label><input type="email" id="f_email" required class="prep-input"></div>
-                    </div>
-                    <div>
-                        <label class="prep-label">Bạn là</label>
-                        <select id="f_type" class="prep-input appearance-none bg-white text-gray-700"><option value="Học sinh">Học sinh/Sinh viên</option><option value="Người đi làm">Người đi làm</option></select>
-                    </div>
-                    <div>
-                        <label class="prep-label">Khóa học bạn quan tâm (*)</label>
-                        <select id="f_course" required class="prep-input appearance-none bg-white text-gray-700"><option value="Giao tiếp">Tiếng Anh Giao Tiếp</option><option value="TOEIC">Luyện thi TOEIC</option></select>
-                    </div>
-                    <div><label class="prep-label">Nội dung</label><textarea id="f_msg" rows="3" class="prep-input resize-none"></textarea></div>
-                    <div class="flex justify-end mt-6">
-                        <button type="submit" id="submitConsultBtn" class="bg-white text-blue-600 font-bold px-8 py-3 rounded-full hover:bg-gray-100 transition shadow-md flex items-center gap-2">Gửi câu hỏi <i class="fa fa-arrow-right"></i></button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </section>
-
-    <!-- JS Logic -->
-    <script>
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz9cysuEl0HwZO9IEKnk4iKkA6A27-8gEse51CI-5zCHENrSMWnBFm__fUAL3tcuYu6Cg/exec"; 
-        let currentConfig = {};
-
-        async function loadConfig() {
-            try {
-                let res = await fetch(APPS_SCRIPT_URL);
-                if (!res.ok) throw new Error("API Fetch Error");
-                currentConfig = await res.json();
-                applyConfig(currentConfig);
-            } catch (e) { 
-                console.error("Lỗi khi tải cấu hình:", e); 
-                document.getElementById('dom_heroTitle').textContent = "Lỗi kết nối";
-                document.getElementById('dom_heroSubtitle').textContent = "Vui lòng kiểm tra lại URL Apps Script.";
-            }
-        }
-
-        function applyConfig(config) {
-            document.documentElement.style.setProperty('--primary-color', config.primaryColor);
-            
-            document.getElementById('dom_siteTitle').textContent = config.siteTitle || "EEC Education";
-            if(config.favicon) document.getElementById('dynamic-favicon').href = config.favicon;
-
-            if(config.bannerImage) document.getElementById('dom_bannerImage').src = config.bannerImage;
-            document.getElementById('dom_heroTitle').textContent = config.heroTitle;
-            document.getElementById('dom_heroSubtitle').textContent = config.heroSubtitle;
-            
-            if(config.course1Img) document.getElementById('dom_course1Img').src = config.course1Img;
-            document.getElementById('dom_course1Title').textContent = config.course1Title;
-            document.getElementById('dom_course1Desc').textContent = config.course1Desc;
-            
-            if(config.course2Img) document.getElementById('dom_course2Img').src = config.course2Img;
-            document.getElementById('dom_course2Title').textContent = config.course2Title;
-            document.getElementById('dom_course2Desc').textContent = config.course2Desc;
-            
-            document.getElementById('dom_formTitle').textContent = config.formTitle;
-            document.getElementById('dom_formSubtitle').textContent = config.formSubtitle;
-
-            document.getElementById('edit_primaryColor').value = config.primaryColor;
-            document.getElementById('edit_siteTitle').value = config.siteTitle || "";
-            document.getElementById('edit_heroTitle').value = config.heroTitle;
-            document.getElementById('edit_heroSubtitle').value = config.heroSubtitle;
-            document.getElementById('edit_course1Title').value = config.course1Title;
-            document.getElementById('edit_course1Desc').value = config.course1Desc;
-            document.getElementById('edit_course2Title').value = config.course2Title;
-            document.getElementById('edit_course2Desc').value = config.course2Desc;
-            document.getElementById('edit_formTitle').value = config.formTitle;
-            document.getElementById('edit_formSubtitle').value = config.formSubtitle;
-        }
-
-        function checkAuth() {
-            const role = localStorage.getItem('role');
-            const user = localStorage.getItem('user');
-            if (role) {
-                document.getElementById('loginBtn').classList.add('hidden');
-                document.getElementById('logoutBtn').classList.remove('hidden');
-                document.getElementById('welcomeMsg').classList.remove('hidden');
-                document.getElementById('welcomeMsg').textContent = `Xin chào, ${user}`;
-                if (role === 'admin') document.getElementById('adminToggleBtn').classList.remove('hidden');
-            } else {
-                document.getElementById('loginBtn').classList.remove('hidden');
-                document.getElementById('logoutBtn').classList.add('hidden');
-                document.getElementById('welcomeMsg').classList.add('hidden');
-                document.getElementById('adminToggleBtn').classList.add('hidden');
-                document.getElementById('adminPanel').classList.add('hidden');
-            }
-        }
-
-        document.getElementById('loginBtn').onclick = () => document.getElementById('loginModal').classList.remove('hidden');
-        document.getElementById('adminToggleBtn').onclick = () => document.getElementById('adminPanel').classList.remove('hidden');
-        document.getElementById('logoutBtn').onclick = () => { localStorage.clear(); checkAuth(); alert('Đã đăng xuất!'); };
-
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('submitLoginBtn');
-            btn.textContent = "Đang xử lý...";
-            try {
-                let res = await fetch(APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    headers: { "Content-Type": "text/plain;charset=utf-8" },
-                    body: JSON.stringify({ action: 'login', username: document.getElementById('l_user').value, password: document.getElementById('l_pass').value })
-                }).then(r => r.json());
-
-                if(res.success) {
-                    localStorage.setItem('role', res.role);
-                    localStorage.setItem('user', document.getElementById('l_user').value);
-                    document.getElementById('loginModal').classList.add('hidden');
-                    checkAuth();
-                } else {
-                    document.getElementById('loginErr').textContent = res.message;
-                    document.getElementById('loginErr').classList.remove('hidden');
-                }
-            } catch(e) {
-                 document.getElementById('loginErr').textContent = "Lỗi kết nối CORS / URL không hợp lệ.";
-                 document.getElementById('loginErr').classList.remove('hidden');
-                 console.error(e);
-            }
-            btn.textContent = "Đăng nhập";
-        });
-
-        async function uploadImageToDrive(fileInput) {
-            if (!fileInput.files || fileInput.files.length === 0) return null;
-            const file = fileInput.files[0];
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = async function() {
-                    try {
-                        const res = await fetch(APPS_SCRIPT_URL, {
-                            method: 'POST',
-                            headers: { "Content-Type": "text/plain;charset=utf-8" },
-                            body: JSON.stringify({ action: 'upload_image', filename: file.name, mimeType: file.type, base64: reader.result })
-                        }).then(r => r.json());
-                        if (res.success) resolve(res.url); else reject("Lỗi upload từ server");
-                    } catch(err) {
-                        reject(err);
-                    }
-                };
-                reader.readAsDataURL(file);
-            });
-        }
-
-        document.getElementById('saveConfigBtn').addEventListener('click', async () => {
-            const btn = document.getElementById('saveConfigBtn');
-            btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang tải ảnh và lưu...';
-            btn.disabled = true;
-
-            let newConfig = { ...currentConfig };
-            newConfig.primaryColor = document.getElementById('edit_primaryColor').value;
-            newConfig.siteTitle = document.getElementById('edit_siteTitle').value;
-            newConfig.heroTitle = document.getElementById('edit_heroTitle').value;
-            newConfig.heroSubtitle = document.getElementById('edit_heroSubtitle').value;
-            newConfig.course1Title = document.getElementById('edit_course1Title').value;
-            newConfig.course1Desc = document.getElementById('edit_course1Desc').value;
-            newConfig.course2Title = document.getElementById('edit_course2Title').value;
-            newConfig.course2Desc = document.getElementById('edit_course2Desc').value;
-            newConfig.formTitle = document.getElementById('edit_formTitle').value;
-            newConfig.formSubtitle = document.getElementById('edit_formSubtitle').value;
-
-            try {
-                const favUrl = await uploadImageToDrive(document.getElementById('edit_favicon'));
-                if (favUrl) newConfig.favicon = favUrl;
-
-                const bannerUrl = await uploadImageToDrive(document.getElementById('edit_bannerImage'));
-                if (bannerUrl) newConfig.bannerImage = bannerUrl;
-
-                const c1Url = await uploadImageToDrive(document.getElementById('edit_course1Img'));
-                if (c1Url) newConfig.course1Img = c1Url;
-
-                const c2Url = await uploadImageToDrive(document.getElementById('edit_course2Img'));
-                if (c2Url) newConfig.course2Img = c2Url;
-
-                await fetch(APPS_SCRIPT_URL, { 
-                    method: 'POST', 
-                    headers: { "Content-Type": "text/plain;charset=utf-8" },
-                    body: JSON.stringify({ action: 'update_config', data: newConfig }) 
-                });
-
-                alert('Cập nhật Web thành công!');
-                document.getElementById('adminPanel').classList.add('hidden');
-                applyConfig(newConfig);
-                currentConfig = newConfig;
-            } catch (err) {
-                alert("Có lỗi khi lưu cấu hình. Vui lòng bật F12 để kiểm tra log.");
-                console.error(err);
-            }
-            btn.innerHTML = '<i class="fa fa-save"></i> Lưu tất cả thay đổi';
-            btn.disabled = false;
-        });
-
-        document.getElementById('consultForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('submitConsultBtn');
-            btn.innerHTML = 'Đang gửi... <i class="fa fa-spinner fa-spin"></i>';
-            const payload = {
-                action: 'submit_form',
-                name: document.getElementById('f_name').value,
-                phone: document.getElementById('f_phone').value,
-                year: document.getElementById('f_year').value,
-                email: document.getElementById('f_email').value,
-                type: document.getElementById('f_type').value,
-                course: document.getElementById('f_course').value,
-                message: document.getElementById('f_msg').value
-            };
-            try {
-                let res = await fetch(APPS_SCRIPT_URL, { 
-                    method: 'POST', 
-                    headers: { "Content-Type": "text/plain;charset=utf-8" },
-                    body: JSON.stringify(payload) 
-                }).then(r => r.json());
-                
-                if(res.success) {
-                    alert("Gửi thành công! Chúng tôi sẽ liên hệ sớm.");
-                    document.getElementById('consultForm').reset();
-                }
-            } catch (err) { 
-                alert("Lỗi khi gửi form.");
-                console.error(err);
-            }
-            btn.innerHTML = 'Gửi câu hỏi <i class="fa fa-arrow-right"></i>';
-        });
-
-        loadConfig();
-        checkAuth();
-    </script>
 </body>
 </html>
